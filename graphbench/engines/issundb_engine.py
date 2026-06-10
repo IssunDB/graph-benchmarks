@@ -15,7 +15,6 @@ import shutil
 import time
 from pathlib import Path
 
-import pyarrow.parquet as pq
 
 from .base import BuildResult, Engine, EngineInfo, Record, package_version
 from ..schema import Schema
@@ -69,7 +68,9 @@ class IssunDBEngine(Engine):
             dst_parquet = import_dir / f"{label.name}.parquet"
             df = pl.read_parquet(parquet_path)
             df = df.with_columns(
-                (pl.col(self.schema.id_column).cast(pl.Int64) + offsets[label.name]).alias("_id")
+                (
+                    pl.col(self.schema.id_column).cast(pl.Int64) + offsets[label.name]
+                ).alias("_id")
             )
             df.write_parquet(dst_parquet)
         nodes_prep_time = time.perf_counter() - nodes_prep_start
@@ -80,10 +81,16 @@ class IssunDBEngine(Engine):
             parquet_path = data_dir / "edges" / f"{rel.name}.parquet"
             jsonl_path = import_dir / f"{rel.name}.jsonl"
             df = pl.read_parquet(parquet_path)
-            df = df.with_columns([
-                (pl.col(self.schema.src_column).cast(pl.Int64) + offsets[rel.src]).alias("from"),
-                (pl.col(self.schema.dst_column).cast(pl.Int64) + offsets[rel.dst]).alias("to")
-            ])
+            df = df.with_columns(
+                [
+                    (
+                        pl.col(self.schema.src_column).cast(pl.Int64) + offsets[rel.src]
+                    ).alias("from"),
+                    (
+                        pl.col(self.schema.dst_column).cast(pl.Int64) + offsets[rel.dst]
+                    ).alias("to"),
+                ]
+            )
             # Drop original src/dst columns to avoid importing them as edge properties
             df = df.drop([self.schema.src_column, self.schema.dst_column])
             df.write_ndjson(jsonl_path)
@@ -116,7 +123,6 @@ class IssunDBEngine(Engine):
         edges_seconds = edges_prep_time + query_time * 0.5
 
         return BuildResult(nodes_seconds, edges_seconds)
-
 
     def run(self, cypher: str) -> list[Record]:
         payload = json.loads(self._db.query(cypher))
