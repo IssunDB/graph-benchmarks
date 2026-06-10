@@ -61,9 +61,8 @@ engine can never serve a repeated identical statement from a plan or result cach
 
 ### Methodology
 
-The suite is built, so the published numbers are reproducible and difficult to manipulate, including by us
-(IssunDB is our own engine, so the methodology deliberately removes every place where the suite could
-favor it):
+The suite is created, so the published numbers are reproducible and hard to manipulate.
+That's achieved by:
 
 - **Engine-independent correctness oracle.** Every query is independently re-implemented in
   [`graphbench/oracle.py`](graphbench/oracle.py) with polars over the raw Parquet dataset. Each engine's
@@ -158,9 +157,6 @@ make sweep SCALES=1000,10000,100000
 ```bash
 make test
 ```
-
-The unit tests cover generator determinism, result normalization, the correctness oracle (verified against
-independent numpy computations), and an end-to-end oracle check of every locally installed embedded engine.
 
 ---
 
