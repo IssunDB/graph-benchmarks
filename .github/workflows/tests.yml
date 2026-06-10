@@ -9,14 +9,14 @@ on:
       - main
     paths-ignore:
       - '**.md'
-      - 'docs/**'
+      - 'assets/**'
   push:
     branches:
       - main
       - develop
     paths-ignore:
       - '**.md'
-      - 'docs/**'
+      - 'assets/**'
     tags:
       - 'v*'
 
