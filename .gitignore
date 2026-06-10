@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.venv/
+venv/
+
+# Graphbench makes these directories for temporary files
+data/
+work/
+results/
+
+# Other files and directories to ignore
+.DS_Store
+.claude/
+.antigravity/
+.agents/
+.codex
+.idea/
+.vscode/

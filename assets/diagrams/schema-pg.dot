@@ -1,0 +1,43 @@
+digraph PropertyGraphSchema {
+    fontname = "Helvetica,Arial,sans-serif"
+    layout = dot
+    rankdir = LR
+    ranksep = 1.0
+    nodesep = 0.6
+    splines = true
+    bgcolor = "white"
+
+    node [
+        fontname = "Helvetica,Arial,sans-serif",
+        fontsize = 12,
+        shape = circle,
+        style = "filled",
+        penwidth = 2.5,
+        width = 1.4,
+        height = 1.4,
+        fixedsize = true
+    ]
+
+    edge [
+        fontname = "Helvetica,Arial,sans-serif",
+        fontsize = 10,
+        color = "#64748b",
+        fontcolor = "#0f172a",
+        penwidth = 2.0,
+        arrowsize = 0.8
+    ]
+
+    // Neo4j-style circular node labels with custom color palettes
+    Person   [label="Person",   fillcolor="#dbeafe", color="#1e40af", fontcolor="#1e40af"]
+    City     [label="City",     fillcolor="#d1fae5", color="#065f46", fontcolor="#065f46"]
+    State    [label="State",    fillcolor="#ccfbf1", color="#115e59", fontcolor="#115e59"]
+    Country  [label="Country",  fillcolor="#cffafe", color="#075985", fontcolor="#075985"]
+    Interest [label="Interest", fillcolor="#e0e7ff", color="#3730a3", fontcolor="#3730a3"]
+
+    // Directed relationship edges
+    Person -> Person [label="FOLLOWS"]
+    Person -> City [label="LIVES_IN"]
+    Person -> Interest [label="HAS_INTEREST"]
+    City -> State [label="CITY_IN"]
+    State -> Country [label="STATE_IN"]
+}

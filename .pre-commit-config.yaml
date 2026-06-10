@@ -1,0 +1,28 @@
+default_stages: [ pre-commit ]
+fail_fast: false
+exclude: '(^data/|^tmp/|^assets/|^results/)'
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+        args: [ --markdown-linebreak-ext=md ]
+      - id: end-of-file-fixer
+      - id: mixed-line-ending
+      - id: check-merge-conflict
+      - id: check-added-large-files
+      - id: detect-private-key
+      - id: check-yaml
+      - id: check-toml
+      - id: check-json
+      - id: check-docstring-first
+      - id: pretty-format-json
+        args: [ --autofix, --no-sort-keys ]
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.9.0
+    hooks:
+      - id: ruff
+        args: [ --fix ]
+      - id: ruff-format

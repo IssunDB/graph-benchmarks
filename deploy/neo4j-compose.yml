@@ -1,0 +1,16 @@
+services:
+  neo4j:
+    image: neo4j:${NEO4J_VERSION:-5.26}
+    environment:
+      - NEO4J_AUTH=${NEO4J_USER:-neo4j}/${NEO4J_PASSWORD:-password}
+      - NEO4J_server_memory_pagecache_size=2G
+      - NEO4J_server_memory_heap_initial__size=2G
+      - NEO4J_server_memory_heap_max__size=4G
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    volumes:
+      - neo4j-data:/data
+
+volumes:
+  neo4j-data:
