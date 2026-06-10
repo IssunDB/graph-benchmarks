@@ -68,7 +68,7 @@ CATALOG: tuple[Query, ...] = (
     Query(
         name="youngest_cities_in_country",
         category="aggregation",
-        description="5 cities in a country with the lowest average age, over a 4-hop chain.",
+        description="5 cities in a country with the lowest average age, over a 3-hop chain.",
         cypher=(
             "MATCH (p:Person)-[:LIVES_IN]->(c:City)-[:CITY_IN]->(s:State)-[:STATE_IN]->(co:Country) "
             "WHERE co.name = 'Country_00' "
@@ -80,7 +80,7 @@ CATALOG: tuple[Query, ...] = (
     Query(
         name="age_band_by_country",
         category="aggregation",
-        description="Count of people aged 30-40 per country, over a 4-hop chain.",
+        description="Count of people aged 30-40 per country, over a 3-hop chain.",
         cypher=(
             "MATCH (p:Person)-[:LIVES_IN]->(c:City)-[:CITY_IN]->(s:State)-[:STATE_IN]->(co:Country) "
             "WHERE p.age >= 30 AND p.age <= 40 "

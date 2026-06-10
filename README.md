@@ -1,11 +1,14 @@
 ## Graph Benchmarks
 
+[![Python version](https://img.shields.io/badge/python-%3E=3.10-3776ab?style=flat&labelColor=282c34&logo=python)](https://github.com/IssunDB/issun-db)
+[![License: MIT](https://img.shields.io/badge/license-MIT-ffd343?style=flat&labelColor=282c34&logo=open-source-initiative)](LICENSE)
+
 This repository includes a collection of graph benchmarks to compare the performance of a few graph databases
 against IssunDB.
 
 ### Benchmarked Graph Databases
 
-| # | Databases       | Project Repository or Website                                 |
+| # | Database        | Project Repository or Website                                 |
 |---|-----------------|---------------------------------------------------------------|
 | 1 | **IssunDB**     | [IssunDB/issun-db](https://github.com/IssunDB/issun-db)       |
 | 2 | **LadybugDB**   | [LadybugDB/ladybug](https://github.com/LadybugDB/ladybug)     |
@@ -15,6 +18,8 @@ against IssunDB.
 ### Schema and Queries
 
 #### Benchmark Graph Dataset
+
+Benchmark dataset is a synthetic property graph with the following schema representations (property graph and relational):
 
 <div align="center">
   <picture>
@@ -41,11 +46,13 @@ See the [query definitions](graphbench/queries.py) for more details.
 | 2 | **one_hop_neighbors**          | `expand`      | List the people a given person follows.                                       |
 | 3 | **top_followed**               | `aggregation` | Top 3 most-followed people.                                                   |
 | 4 | **top_followed_city**          | `aggregation` | City of the single most-followed person.                                      |
-| 5 | **youngest_cities_in_country** | `aggregation` | 5 cities in a country with the lowest average age, over a 4-hop chain.        |
-| 6 | **age_band_by_country**        | `aggregation` | Count of people aged 30-40 per country, over a 4-hop chain.                   |
+| 5 | **youngest_cities_in_country** | `aggregation` | 5 cities in a country with the lowest average age, over a 3-hop chain.        |
+| 6 | **age_band_by_country**        | `aggregation` | Count of people aged 30-40 per country, over a 3-hop chain.                   |
 | 7 | **interest_gender_by_city**    | `filter_join` | Top cities by count of male people with a given interest (using multi-MATCH). |
 | 8 | **two_hop_paths**              | `path_count`  | Count of length-2 FOLLOWS paths (self-join on the middle node).               |
 | 9 | **two_hop_paths_filtered**     | `path_count`  | Length-2 FOLLOWS paths filtered on intermediate and destination age.          |
+
+---
 
 ### Quickstart
 
@@ -103,6 +110,13 @@ make run
 
 All results are saved in the `results/` directory.
 
+---
+
+### Reporting Bugs
+
+Please report bugs and issues you encounter via the [issue page](https://github.com/IssunDB/graph-benchmarks/issues).
+
 ### License
 
 This project is licensed under the MIT License (see [LICENSE](LICENSE)).
+
