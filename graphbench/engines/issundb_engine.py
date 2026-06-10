@@ -17,13 +17,14 @@ from pathlib import Path
 
 import pyarrow.parquet as pq
 
-from ..queries import Query
+from .base import BuildResult, Engine, EngineInfo, Record, package_version
 from ..schema import Schema
-from .base import BuildResult, Engine, EngineInfo, Record
 
 
 class IssunDBEngine(Engine):
     name = "issundb"
+    kind = "embedded"
+    build_method = "row-at-a-time add_node/add_edge (binding has no bulk-load path)"
 
     def __init__(self, schema: Schema, workdir: Path):
         super().__init__(schema, workdir)
@@ -39,11 +40,10 @@ class IssunDBEngine(Engine):
     @classmethod
     def probe(cls) -> EngineInfo:
         try:
-            import issundb  # noqa: F401
+            import issundb
         except Exception as exc:  # pragma: no cover - environment dependent
             return EngineInfo(cls.name, "", False, str(exc))
-        version = getattr(issundb, "__version__", "unknown")
-        return EngineInfo(cls.name, version, True)
+        return EngineInfo(cls.name, package_version(issundb, "issundb"), True)
 
     def build(self, data_dir: Path) -> BuildResult:
         nodes_start = time.perf_counter()
@@ -69,7 +69,7 @@ class IssunDBEngine(Engine):
         edges_seconds = time.perf_counter() - edges_start
         return BuildResult(nodes_seconds, edges_seconds)
 
-    def run(self, query: Query) -> list[Record]:
-        payload = json.loads(self._db.query(query.cypher))
+    def run(self, cypher: str) -> list[Record]:
+        payload = json.loads(self._db.query(cypher))
         columns = payload["columns"]
         return [dict(zip(columns, record["values"])) for record in payload["records"]]

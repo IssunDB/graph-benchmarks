@@ -17,7 +17,7 @@ max_line_length = 100
 max_line_length = 150
 trim_trailing_whitespace = false
 
-[*.sh]
+[*.{sh,nix}]
 indent_size = 2
 
 [*.{yaml,yml,json,jsonl}]

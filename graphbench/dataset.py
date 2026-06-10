@@ -37,6 +37,11 @@ POPULARITY_SHAPE = 1.5
 INTERESTS_PER_PERSON = (1, 6)
 AGE_RANGE = (18, 81)
 
+# Sizes of the probe pools written to the manifest. The runner rotates query
+# placeholders over these pools so repeated rounds never run an identical statement.
+POOL_PERSONS = 16
+POOL_INTERESTS = 8
+
 
 @dataclass(frozen=True)
 class Manifest:
@@ -45,8 +50,10 @@ class Manifest:
     scale: int
     seed: int
     counts: dict[str, int]
-    # Literal values that exist in the data, used by the query catalog.
-    probes: dict[str, object]
+    # Pools of literal values that exist in the data, keyed by query placeholder
+    # name. Person ids are sampled from persons with at least one outgoing FOLLOWS
+    # edge so expansion queries never degenerate to empty results.
+    pools: dict[str, list]
 
 
 def _write(table: pa.Table, path: Path) -> None:
@@ -160,6 +167,9 @@ def generate(
     dst = rng.choice(n_persons, size=n_raw, p=popularity / popularity.sum())
     keep = src != dst
     follow_key = np.unique(src[keep].astype(np.int64) * n_persons + dst[keep])
+    # np.unique returns edges sorted by (src, dst); shuffle so no engine gets a
+    # silent locality advantage from sorted insertion order.
+    follow_key = follow_key[rng.permutation(follow_key.size)]
     f_src = follow_key // n_persons
     f_dst = follow_key % n_persons
     _write(pa.table({"src": f_src, "dst": f_dst}), edges_dir / "FOLLOWS.parquet")
@@ -178,6 +188,7 @@ def generate(
     person_rep = np.repeat(person_ids, k)
     raw_interest = rng.integers(0, N_INTERESTS, person_rep.size)
     int_key = np.unique(person_rep.astype(np.int64) * N_INTERESTS + raw_interest)
+    int_key = int_key[rng.permutation(int_key.size)]
     i_src = int_key // N_INTERESTS
     i_dst = int_key % N_INTERESTS
     _write(pa.table({"src": i_src, "dst": i_dst}), edges_dir / "HAS_INTEREST.parquet")
@@ -194,15 +205,19 @@ def generate(
     )
     counts["STATE_IN"] = n_states
 
-    probes = {
-        "person_id": min(42, n_persons - 1),
-        "country": "Country_00",
-        "interest": "Interest_00",
-        "gender": "male",
-        "age_low": 30,
-        "age_high": 40,
+    followers = np.unique(f_src)
+    pool_persons = rng.choice(
+        followers, size=min(POOL_PERSONS, followers.size), replace=False
+    )
+    pool_interests = rng.choice(
+        N_INTERESTS, size=min(POOL_INTERESTS, N_INTERESTS), replace=False
+    )
+    pools = {
+        "person_id": sorted(int(x) for x in pool_persons),
+        "country": [_country_name(i) for i in range(N_COUNTRIES)],
+        "interest": _interest_name(np.sort(pool_interests)),
     }
-    manifest = Manifest(scale=scale, seed=seed, counts=counts, probes=probes)
+    manifest = Manifest(scale=scale, seed=seed, counts=counts, pools=pools)
     (out_dir / "manifest.json").write_text(json.dumps(asdict(manifest), indent=2))
     return manifest
 

@@ -9,8 +9,9 @@ from __future__ import annotations
 
 from .base import BuildResult, Engine, EngineInfo, Record, normalize_rows
 
-# Public engine name -> (module, class name). Order is the default run order; the
-# first available engine is used as the correctness reference.
+# Public engine name -> (module, class name). Order is the default run order.
+# Correctness is checked against the engine-independent oracle (see `oracle.py`),
+# never against another engine.
 _REGISTRY: dict[str, tuple[str, str]] = {
     "issundb": ("graphbench.engines.issundb_engine", "IssunDBEngine"),
     "ladybug": ("graphbench.engines.ladybug_engine", "LadybugEngine"),

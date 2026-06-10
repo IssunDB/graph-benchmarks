@@ -7,14 +7,18 @@ dependencies = [
     "numpy>=2.0",
     "pyarrow>=17.0",
     "matplotlib>=3.9",
+    "polars>=1.0",
     "issundb==0.1.0a1",
 ]
 
 [project.optional-dependencies]
 ladybug = ["ladybug>=0.15"]
 lance-graph = ["lance-graph>=0.5"]
-neo4j = ["neo4j>=5.0", "polars>=1.0"]
-all = ["ladybug>=0.15", "lance-graph>=0.5", "neo4j>=5.0", "polars>=1.0"]
+neo4j = ["neo4j>=5.0"]
+all = ["ladybug>=0.15", "lance-graph>=0.5", "neo4j>=5.0"]
+
+[dependency-groups]
+dev = ["pytest>=8.0"]
 
 [build-system]
 requires = ["hatchling"]

@@ -1,4 +1,4 @@
-"""Command-line entry point: `graphbench gen | run | report | engines`."""
+"""Command-line entry point: `graphbench gen | run | sweep | report | engines`."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ from pathlib import Path
 from . import engines as eng
 from .dataset import generate
 from .queries import CATALOG, by_name
-from .report import load_results, plot, to_markdown
+from .report import load_results, plot, plot_scaling, to_markdown
 from .runner import run_benchmark
 
 
@@ -32,17 +32,23 @@ def _cmd_engines(args: argparse.Namespace) -> None:
         print(f"{name:<12} {status}")
 
 
+def _engine_names(args: argparse.Namespace) -> list[str]:
+    return args.engines.split(",") if args.engines else list(eng.ALL_ENGINES)
+
+
 def _cmd_run(args: argparse.Namespace) -> None:
-    names = args.engines.split(",") if args.engines else list(eng.ALL_ENGINES)
     queries = (
         tuple(by_name(n) for n in args.queries.split(",")) if args.queries else CATALOG
     )
     results = run_benchmark(
-        engine_names=names,
+        engine_names=_engine_names(args),
         data_dir=Path(args.data),
         warmup=args.warmup,
-        rounds=args.rounds,
+        min_rounds=args.min_rounds,
+        time_budget_s=args.time_budget,
+        max_rounds=args.max_rounds,
         queries=queries,
+        isolate=not args.no_isolate,
     )
     out = Path(args.out)
     out.parent.mkdir(parents=True, exist_ok=True)
@@ -50,6 +56,30 @@ def _cmd_run(args: argparse.Namespace) -> None:
     print(f"\nWrote results to {out}")
     if not args.no_report:
         _render(results, Path(args.report_md), Path(args.report_plot), args.baseline)
+
+
+def _cmd_sweep(args: argparse.Namespace) -> None:
+    scales = [int(s) for s in args.scales.split(",")]
+    out_dir = Path(args.out_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    all_results = []
+    for scale in scales:
+        data_dir = Path(args.workdir) / f"data_{scale}"
+        print(f"\n=== scale {scale} ===")
+        generate(data_dir, scale=scale, seed=args.seed)
+        results = run_benchmark(
+            engine_names=_engine_names(args),
+            data_dir=data_dir,
+            warmup=args.warmup,
+            min_rounds=args.min_rounds,
+            time_budget_s=args.time_budget,
+            max_rounds=args.max_rounds,
+            isolate=not args.no_isolate,
+        )
+        (out_dir / f"results_{scale}.json").write_text(json.dumps(results, indent=2))
+        all_results.append(results)
+    plot_scaling(all_results, out_dir / "scaling.png")
+    print(f"\nWrote per-scale results and scaling plot to {out_dir}")
 
 
 def _cmd_report(args: argparse.Namespace) -> None:
@@ -71,6 +101,30 @@ def _render(
         print(f"(plot skipped: {exc})")
 
 
+def _add_timing_args(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument(
+        "--engines", default="", help="Comma list; default all registered"
+    )
+    parser.add_argument("--warmup", type=int, default=3)
+    parser.add_argument(
+        "--min-rounds", type=int, default=20, help="Minimum timed rounds per query"
+    )
+    parser.add_argument(
+        "--time-budget",
+        type=float,
+        default=2.0,
+        help="Seconds of timed rounds per query once min-rounds is reached",
+    )
+    parser.add_argument(
+        "--max-rounds", type=int, default=1000, help="Hard cap on timed rounds"
+    )
+    parser.add_argument(
+        "--no-isolate",
+        action="store_true",
+        help="Run engines in-process instead of one worker process per engine",
+    )
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="graphbench", description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)
@@ -84,14 +138,14 @@ def build_parser() -> argparse.ArgumentParser:
     e = sub.add_parser("engines", help="List engine availability")
     e.set_defaults(func=_cmd_engines)
 
-    r = sub.add_parser("run", help="Build, validate, and time engines")
-    r.add_argument("--engines", default="", help="Comma list; default all registered")
+    r = sub.add_parser(
+        "run", help="Build, validate against the oracle, and time engines"
+    )
+    _add_timing_args(r)
     r.add_argument(
         "--queries", default="", help="Comma list of query names; default all"
     )
     r.add_argument("--data", default="data")
-    r.add_argument("--warmup", type=int, default=3)
-    r.add_argument("--rounds", type=int, default=10)
     r.add_argument("--out", default="results/results.json")
     r.add_argument(
         "--baseline", default=None, help="Engine to compute speedups against"
@@ -100,6 +154,18 @@ def build_parser() -> argparse.ArgumentParser:
     r.add_argument("--report-plot", default="results/latency.png")
     r.add_argument("--no-report", action="store_true")
     r.set_defaults(func=_cmd_run)
+
+    s = sub.add_parser(
+        "sweep", help="Generate and benchmark a series of scales, plot scaling curves"
+    )
+    _add_timing_args(s)
+    s.add_argument(
+        "--scales", default="1000,10000,100000", help="Comma list of Person counts"
+    )
+    s.add_argument("--seed", type=int, default=0)
+    s.add_argument("--workdir", default="work/sweep")
+    s.add_argument("--out-dir", default="results/sweep")
+    s.set_defaults(func=_cmd_sweep)
 
     p = sub.add_parser("report", help="Render a report from a results JSON")
     p.add_argument("--results", default="results/results.json")

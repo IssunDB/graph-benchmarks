@@ -1,0 +1,88 @@
+name: Run Tests
+
+on:
+  workflow_dispatch:
+  schedule: # Run every day at midnight (UTC)
+    - cron: '0 0 * * *'
+  pull_request:
+    branches:
+      - main
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+  push:
+    branches:
+      - main
+      - develop
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+    tags:
+      - 'v*'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install core dependencies
+        run: uv sync
+
+      - name: Install optional engines (best effort)
+        run: uv pip install ladybug lance-graph neo4j || echo "some optional engines unavailable"
+
+      - name: Unit tests
+        run: uv run --with pytest-cov pytest -v --cov=graphbench --cov-report=xml --cov-report=term-missing
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          use_oidc: true
+          files: ./coverage.xml
+          fail_ci_if_error: true
+
+      - name: Smoke benchmark (small scale, available engines, oracle gate)
+        run: |
+          uv run graphbench gen --scale 500 --out data-ci
+          uv run graphbench run \
+            --data data-ci \
+            --engines issundb,ladybug,lance-graph \
+            --warmup 1 --min-rounds 3 --time-budget 0.2 --max-rounds 5 \
+            --out results-ci/results.json \
+            --report-md results-ci/report.md \
+            --report-plot results-ci/latency.png
+
+      - name: Fail on correctness mismatches
+        run: |
+          uv run python - <<'EOF'
+          import json, sys
+          results = json.load(open("results-ci/results.json"))
+          bad = [
+              (query, engine)
+              for query, gate in results["correctness"].items()
+              for engine, ok in gate["matches"].items()
+              if not ok
+          ]
+          for query, engine in bad:
+              print(f"MISMATCH vs oracle: {engine} on {query}")
+          sys.exit(1 if bad else 0)
+          EOF
+
+      - name: Upload smoke report
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-report
+          path: results-ci/

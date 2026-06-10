@@ -13,13 +13,14 @@ from pathlib import Path
 
 import pyarrow.parquet as pq
 
-from ..queries import Query
+from .base import BuildResult, Engine, EngineInfo, Record, package_version
 from ..schema import Schema
-from .base import BuildResult, Engine, EngineInfo, Record
 
 
 class LanceGraphEngine(Engine):
     name = "lance-graph"
+    kind = "in-memory"
+    build_method = "reads Parquet into Arrow tables (no persistent build or indexing)"
 
     def __init__(self, schema: Schema, workdir: Path):
         super().__init__(schema, workdir)
@@ -41,9 +42,7 @@ class LanceGraphEngine(Engine):
             import lance_graph
         except Exception as exc:  # pragma: no cover - environment dependent
             return EngineInfo(cls.name, "", False, str(exc))
-        return EngineInfo(
-            cls.name, getattr(lance_graph, "__version__", "unknown"), True
-        )
+        return EngineInfo(cls.name, package_version(lance_graph, "lance-graph"), True)
 
     def build(self, data_dir: Path) -> BuildResult:
         nodes_start = time.perf_counter()
@@ -61,12 +60,10 @@ class LanceGraphEngine(Engine):
         edges_seconds = time.perf_counter() - edges_start
         return BuildResult(nodes_seconds, edges_seconds)
 
-    def run(self, query: Query) -> list[Record]:
+    def run(self, cypher: str) -> list[Record]:
         from lance_graph import CypherQuery
 
-        result = (
-            CypherQuery(query.cypher).with_config(self._config).execute(self._tables)
-        )
+        result = CypherQuery(cypher).with_config(self._config).execute(self._tables)
         # Result is an Arrow Table or RecordBatch; normalize to a list of row dicts.
         if hasattr(result, "to_pylist"):
             return result.to_pylist()

@@ -11,10 +11,8 @@ import asyncio
 import time
 from pathlib import Path
 
-
-from ..queries import Query
+from .base import BuildResult, Engine, EngineInfo, Record, package_version
 from ..schema import Schema
-from .base import BuildResult, Engine, EngineInfo, Record
 
 # Map property name -> Ladybug/Cypher column type.
 _TYPE_BY_PROP = {
@@ -31,6 +29,8 @@ _TYPE_BY_PROP = {
 
 class LadybugEngine(Engine):
     name = "ladybug"
+    kind = "embedded"
+    build_method = "DDL + bulk COPY ... FROM Parquet"
 
     def __init__(self, schema: Schema, workdir: Path):
         super().__init__(schema, workdir)
@@ -48,7 +48,7 @@ class LadybugEngine(Engine):
             import ladybug as lb
         except Exception as exc:  # pragma: no cover - environment dependent
             return EngineInfo(cls.name, "", False, str(exc))
-        return EngineInfo(cls.name, getattr(lb, "__version__", "unknown"), True)
+        return EngineInfo(cls.name, package_version(lb, "ladybug"), True)
 
     def _node_ddl(self, label) -> str:
         cols = ", ".join(f"{p} {_TYPE_BY_PROP[p]}" for p in label.properties)
@@ -80,5 +80,5 @@ class LadybugEngine(Engine):
         self._conn = self._lb.Connection(self._db)
         return BuildResult(nodes_seconds, edges_seconds)
 
-    def run(self, query: Query) -> list[Record]:
-        return self._conn.execute(query.cypher).get_as_pl().to_dicts()
+    def run(self, cypher: str) -> list[Record]:
+        return self._conn.execute(cypher).get_as_pl().to_dicts()

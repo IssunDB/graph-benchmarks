@@ -1,68 +1,68 @@
 digraph PropertyGraphSchema {
-    fontname = "Helvetica,Arial,sans-serif"
-    layout = dot
-    rankdir = LR
-    ranksep = 0.8
-    nodesep = 0.5
-    splines = true
-    bgcolor = "white"
+fontname = "Helvetica,Arial,sans-serif"
+layout = dot
+rankdir = LR
+ranksep = 0.8
+nodesep = 0.5
+splines = true
+bgcolor = "white"
 
-    node [
-        fontname = "Helvetica,Arial,sans-serif",
-        shape = plain
-    ]
+node [
+fontname = "Helvetica,Arial,sans-serif",
+shape = plain
+]
 
-    edge [
-        fontname = "Helvetica,Arial,sans-serif",
-        fontsize = 10,
-        color = "#475569",
-        fontcolor = "#0f172a",
-        penwidth = 1.5,
-        arrowsize = 0.8
-    ]
+edge [
+fontname = "Helvetica,Arial,sans-serif",
+fontsize = 10,
+color = "#475569",
+fontcolor = "#0f172a",
+penwidth = 1.5,
+arrowsize = 0.8
+]
 
-    // Nodes definition with properties and types
-    Person [label=<<table border="0" cellborder="1" cellspacing="0" cellpadding="6" color="#1e3a8a">
-        <tr><td bgcolor="#dbeafe"><b><font color="#1e3a8a">Person</font></b></td></tr>
-        <tr><td align="left" bgcolor="#ffffff"><font color="#334155">id : int (PK)</font></td></tr>
-        <tr><td align="left" bgcolor="#ffffff"><font color="#334155">name : string</font></td></tr>
-        <tr><td align="left" bgcolor="#ffffff"><font color="#334155">gender : string</font></td></tr>
-        <tr><td align="left" bgcolor="#ffffff"><font color="#334155">age : int</font></td></tr>
-        <tr><td align="left" bgcolor="#ffffff"><font color="#334155">is_married : boolean</font></td></tr>
-    </table>>]
+// Nodes definition with properties and types
+    Person [label = <<table border="0" cellborder="1" cellspacing="0" cellpadding="6" color="#1e3a8a">
+<tr><td bgcolor="#dbeafe"><b><font color="#1e3a8a">Person</font></b></td></tr>
+<tr><td align="left" bgcolor="#ffffff"><font color="#334155">id : int (PK)</font></td></tr>
+<tr><td align="left" bgcolor="#ffffff"><font color="#334155">name : string</font></td></tr>
+<tr><td align="left" bgcolor="#ffffff"><font color="#334155">gender : string</font></td></tr>
+<tr><td align="left" bgcolor="#ffffff"><font color="#334155">age : int</font></td></tr>
+<tr><td align="left" bgcolor="#ffffff"><font color="#334155">is_married : boolean</font></td></tr>
+</table>>]
 
-    City [label=<<table border="0" cellborder="1" cellspacing="0" cellpadding="6" color="#065f46">
-        <tr><td bgcolor="#d1fae5"><b><font color="#065f46">City</font></b></td></tr>
-        <tr><td align="left" bgcolor="#ffffff"><font color="#334155">id : int (PK)</font></td></tr>
-        <tr><td align="left" bgcolor="#ffffff"><font color="#334155">name : string</font></td></tr>
-        <tr><td align="left" bgcolor="#ffffff"><font color="#334155">state : string</font></td></tr>
-        <tr><td align="left" bgcolor="#ffffff"><font color="#334155">country : string</font></td></tr>
-        <tr><td align="left" bgcolor="#ffffff"><font color="#334155">population : int</font></td></tr>
-    </table>>]
+City [label =<<table border="0" cellborder="1" cellspacing="0" cellpadding="6" color="#065f46">
+<tr><td bgcolor="#d1fae5"><b><font color="#065f46">City</font></b></td></tr>
+<tr><td align="left" bgcolor="#ffffff"><font color="#334155">id : int (PK)</font></td></tr>
+<tr><td align="left" bgcolor="#ffffff"><font color="#334155">name : string</font></td></tr>
+<tr><td align="left" bgcolor="#ffffff"><font color="#334155">state : string</font></td></tr>
+<tr><td align="left" bgcolor="#ffffff"><font color="#334155">country : string</font></td></tr>
+<tr><td align="left" bgcolor="#ffffff"><font color="#334155">population : int</font></td></tr>
+</table>>]
 
-    State [label=<<table border="0" cellborder="1" cellspacing="0" cellpadding="6" color="#115e59">
-        <tr><td bgcolor="#ccfbf1"><b><font color="#115e59">State</font></b></td></tr>
-        <tr><td align="left" bgcolor="#ffffff"><font color="#334155">id : int (PK)</font></td></tr>
-        <tr><td align="left" bgcolor="#ffffff"><font color="#334155">name : string</font></td></tr>
-        <tr><td align="left" bgcolor="#ffffff"><font color="#334155">country : string</font></td></tr>
-    </table>>]
+State [label = <<table border="0" cellborder="1" cellspacing="0" cellpadding="6" color="#115e59">
+<tr><td bgcolor="#ccfbf1"><b><font color="#115e59">State</font></b></td></tr>
+<tr><td align="left" bgcolor="#ffffff"><font color="#334155">id : int (PK)</font></td></tr>
+<tr><td align="left" bgcolor="#ffffff"><font color="#334155">name : string</font></td></tr>
+<tr><td align="left" bgcolor="#ffffff"><font color="#334155">country : string</font></td></tr>
+</table>>]
 
-    Country [label=<<table border="0" cellborder="1" cellspacing="0" cellpadding="6" color="#075985">
-        <tr><td bgcolor="#cffafe"><b><font color="#075985">Country</font></b></td></tr>
-        <tr><td align="left" bgcolor="#ffffff"><font color="#334155">id : int (PK)</font></td></tr>
-        <tr><td align="left" bgcolor="#ffffff"><font color="#334155">name : string</font></td></tr>
-    </table>>]
+Country [label = <<table border="0" cellborder="1" cellspacing="0" cellpadding="6" color="#075985">
+<tr><td bgcolor="#cffafe"><b><font color="#075985">Country</font></b></td></tr>
+<tr><td align="left" bgcolor="#ffffff"><font color="#334155">id : int (PK)</font></td></tr>
+<tr><td align="left" bgcolor="#ffffff"><font color="#334155">name : string</font></td></tr>
+</table>>]
 
-    Interest [label=<<table border="0" cellborder="1" cellspacing="0" cellpadding="6" color="#3730a3">
-        <tr><td bgcolor="#e0e7ff"><b><font color="#3730a3">Interest</font></b></td></tr>
-        <tr><td align="left" bgcolor="#ffffff"><font color="#334155">id : int (PK)</font></td></tr>
-        <tr><td align="left" bgcolor="#ffffff"><font color="#334155">name : string</font></td></tr>
-    </table>>]
+Interest [label = <<table border="0" cellborder="1" cellspacing="0" cellpadding="6" color="#3730a3">
+<tr><td bgcolor="#e0e7ff"><b><font color="#3730a3">Interest</font></b></td></tr>
+<tr><td align="left" bgcolor="#ffffff"><font color="#334155">id : int (PK)</font></td></tr>
+<tr><td align="left" bgcolor="#ffffff"><font color="#334155">name : string</font></td></tr>
+</table>>]
 
-    // Relationship Edges
-    Person -> Person [label=" FOLLOWS"]
-    Person -> City [label=" LIVES_IN"]
-    Person -> Interest [label=" HAS_INTEREST"]
-    City -> State [label=" CITY_IN"]
-    State -> Country [label=" STATE_IN"]
+// Relationship Edges
+    Person -> Person [label = " FOLLOWS"]
+Person -> City [label = " LIVES_IN"]
+Person -> Interest [label = " HAS_INTEREST"]
+City -> State [label =" CITY_IN"]
+State -> Country [label = " STATE_IN"]
 }
