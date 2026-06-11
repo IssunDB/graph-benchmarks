@@ -87,6 +87,11 @@ Known limitations (deliberately out of scope so far): the suite measures single-
 no concurrent throughput and no write/update workloads. Engines may not all support every query
 (e.g. variable-length patterns); unsupported queries show as `ERR` in the report rather than being dropped.
 
+> [!IMPORTANT]
+> Benchmarking different systems (with different design philosophies, architectures, feature sets, etc.) is not straightforward and is tricky.
+> Given that it is recommended to run the benchmarks on your environment (or machine) and interpret the results carefully,
+> considering the limitations mentioned above and specific requirements of your use case.
+
 ---
 
 ### Quickstart
