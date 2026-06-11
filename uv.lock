@@ -1107,7 +1107,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "issundb", specifier = "==0.1.0a3" },
+    { name = "issundb", specifier = "==0.1.0a4" },
     { name = "ladybug", marker = "extra == 'all'", specifier = ">=0.15" },
     { name = "ladybug", marker = "extra == 'ladybug'", specifier = ">=0.15" },
     { name = "lance-graph", marker = "extra == 'all'", specifier = ">=0.5" },
@@ -1270,13 +1270,13 @@ wheels = [
 
 [[package]]
 name = "issundb"
-version = "0.1.0a3"
+version = "0.1.0a4"
 source = { registry = "https://pypi.org/simple" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/88/56/6a5e33447d93596f7bae888404cffc40617e0b94bbc558f2a41b700c183b/issundb-0.1.0a3-cp310-abi3-macosx_11_0_arm64.whl", hash = "sha256:1009ad24e22725e2e78b323c3b6a8cba672fb648428e422f0ef74c7e4c1c35ad", size = 6735408, upload-time = "2026-06-11T11:22:33.079Z" },
-    { url = "https://files.pythonhosted.org/packages/ac/e7/712b6aa5ed50179d2c36deee10cac4d2ed2d5f78c20054bb312e745770ae/issundb-0.1.0a3-cp310-abi3-manylinux_2_28_aarch64.whl", hash = "sha256:70912b9060fcdbb142c991b401006030c215e518112e182968f017269a1bca8b", size = 8865989, upload-time = "2026-06-11T11:22:35.155Z" },
-    { url = "https://files.pythonhosted.org/packages/82/37/a64faf5b165e49775aca2357f126cb03e8a7e95b899fdd3e02700a338cfc/issundb-0.1.0a3-cp310-abi3-manylinux_2_28_x86_64.whl", hash = "sha256:b8268c4054efde804246db0fc8411d77ea2704ab11dee85d3e837c1500290949", size = 9956806, upload-time = "2026-06-11T11:22:37.002Z" },
-    { url = "https://files.pythonhosted.org/packages/68/f6/29b6f0ee800aeb5f7e1b878f8bb253e5305b149ef06948c96484c64bc27b/issundb-0.1.0a3-cp310-abi3-win_amd64.whl", hash = "sha256:71889d1f5ff30c0f5a0b7eddf879354b363981c45fdfb77beebd57219908949b", size = 8190247, upload-time = "2026-06-11T11:22:39.37Z" },
+    { url = "https://files.pythonhosted.org/packages/ca/02/477824c8513e532f45c3564ba0d7d084ae7f3302a56a54ab5cbf8ba75df2/issundb-0.1.0a4-cp310-abi3-macosx_11_0_arm64.whl", hash = "sha256:a7816a047eda5925b4339fc25785abd00d2e0b0ff7a8a82e57556088927f6fc9", size = 6756474, upload-time = "2026-06-11T19:48:50.922Z" },
+    { url = "https://files.pythonhosted.org/packages/82/c2/21e21975de9736965b900341dcb2992e0c4f190a90a9fb35ed339bdd8b9e/issundb-0.1.0a4-cp310-abi3-manylinux_2_28_aarch64.whl", hash = "sha256:671717f006f60eb2ed19092c6e9f9c5c375016f9a68fcd3596b06e5a3632c17d", size = 8895588, upload-time = "2026-06-11T19:48:52.711Z" },
+    { url = "https://files.pythonhosted.org/packages/de/b7/31592db6b8072739365aab92c0d5cf9a63e13b16bd532a385134ae7db52e/issundb-0.1.0a4-cp310-abi3-manylinux_2_28_x86_64.whl", hash = "sha256:0386dfdd8ba3bc6978fa5dd2d60ce552d25b2e3d104cec4bed405f2267a06d37", size = 9984831, upload-time = "2026-06-11T19:48:54.663Z" },
+    { url = "https://files.pythonhosted.org/packages/f9/aa/a208a53c063d9bce35cf998d221e5f3cce9cebba53bccb8e4e47e2dc347f/issundb-0.1.0a4-cp310-abi3-win_amd64.whl", hash = "sha256:f9fb9efe024a00eac92a607d4f895f7b5ee5d2d03fe76883f00bfaf2dcf01cd2", size = 8212710, upload-time = "2026-06-11T19:48:56.672Z" },
 ]
 
 [[package]]
