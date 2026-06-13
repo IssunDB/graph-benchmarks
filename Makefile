@@ -20,6 +20,7 @@ help:
 	@echo "  make setup-hooks           # Install Git hooks (pre-commit and pre-push)"
 	@echo "  make test-hooks            # Test Git hooks on all files"
 	@echo "  make clean                 # Remove generated data, temp files, results, etc."
+	@echo "  make shell                 # Enter the Nix development shell environment"
 
 gen:
 	graphbench gen --scale $(SCALE) --seed $(SEED)
@@ -61,3 +62,7 @@ setup-hooks:
 test-hooks:
 	@echo "Testing Git hooks..."
 	@pre-commit run --all-files
+
+shell:
+	@echo "Entering Nix development shell..."
+	@nix develop
