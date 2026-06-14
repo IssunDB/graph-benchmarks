@@ -55,13 +55,9 @@ See the [query definitions](graphbench/queries.py) for more details.
 | 9  | **two_hop_paths_filtered**     | `path_count`  | Length-2 FOLLOWS paths filtered on intermediate and destination age.          |
 | 10 | **follows_reach**              | `var_path`    | Distinct people reachable from a person via 1..2 FOLLOWS hops (`*1..2`).      |
 
-Queries are Cypher templates: predicate literals (`person_id`, `country`, `interest`) are placeholders filled
-from probe pools recorded in the dataset manifest, and the runner rotates the values across timing rounds so an
-engine can never serve a repeated identical statement from a plan or result cache.
-
 ### Methodology
 
-The suite is created, so the published numbers are reproducible and hard to manipulate.
+The benchmarks are created, so the published numbers are reproducible and hard to manipulate.
 That's achieved by:
 
 - **Engine-independent correctness oracle.** Every query is independently re-implemented in
