@@ -153,9 +153,9 @@ def to_markdown(results: dict, baseline: str | None = None) -> str:
         lines.append(f"| {query} | " + " | ".join(cells) + " |")
     lines.append("")
 
-    # Warm latency: median with 95% CI, speedup vs baseline.
+    # Warm latency: median with a 95% CI for the median, speedup vs baseline.
     lines.append(
-        "## Warm Latency, median ms +/- 95% CI"
+        "## Warm Latency, median ms [95% CI of median]"
         + (f", speedup vs {baseline}" if baseline else "")
     )
     lines.append("")
@@ -176,10 +176,11 @@ def to_markdown(results: dict, baseline: str | None = None) -> str:
                 q = results["engines"][name].get("queries", {}).get(query)
                 cells.append("ERR" if isinstance(q, dict) and "error" in q else "n/a")
                 continue
-            ci = _query_stat(results, name, query, "ci95_ms")
+            ci_lo = _query_stat(results, name, query, "ci_lo_ms")
+            ci_hi = _query_stat(results, name, query, "ci_hi_ms")
             text = f"{val:.2f}"
-            if ci is not None:
-                text += f" +/-{ci:.2f}"
+            if ci_lo is not None and ci_hi is not None:
+                text += f" [{ci_lo:.2f}, {ci_hi:.2f}]"
             if baseline and name != baseline and base_val and val > 0:
                 text += f" ({base_val / val:.1f}x)"
             if min_lat is not None and val == min_lat:
@@ -218,7 +219,23 @@ def to_markdown(results: dict, baseline: str | None = None) -> str:
         "- Parameterized queries rotate their literal values across rounds to "
         "defeat plan/result caches. Whole-graph aggregations (top_followed, "
         "two_hop_paths, ...) have no parameters, so their statement is necessarily "
-        "identical every round."
+        "identical every round; the warmup rounds equalize plan/parse caches across "
+        "engines, and none of the engines benchmarked here enable a result cache by "
+        "default, so the identical statement is recomputed each round rather than "
+        "served from a memoized result. These queries are not parameterized because a "
+        "filter would change which physical operator runs (e.g. a filtered count no "
+        "longer exercises the unfiltered path-count kernel), measuring a different "
+        "query rather than defeating a cache."
+    )
+    lines.append(
+        "- Indexing models differ by engine and are not equalized, because they "
+        "cannot be: IssunDB auto-indexes every scalar node property, so its "
+        "equality and range filters become index/range scans with no user action; "
+        "Neo4j has a uniqueness index on `id` per label plus an explicit range index "
+        "on the filter column (Person.age); Ladybug indexes only its primary key "
+        "(`id`); lance-graph is an in-memory engine with no indexes. Filtered queries "
+        "(point_lookup, age_band_by_country) therefore reflect each engine's indexing "
+        "model, not raw execution speed alone."
     )
     for name in engines:
         server_info = results["engines"][name].get("server_info") or {}

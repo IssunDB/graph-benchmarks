@@ -1,10 +1,14 @@
 """IssunDB adapter.
 
-IssunDB is an embedded engine with no bulk COPY path, so nodes and edges are inserted
-one row at a time through `add_node`/`add_edge`. IssunDB allocates its own NodeId per
-node, so the build keeps a per-label map from the dataset id to the allocated NodeId
-and resolves edge endpoints through it. The dataset id is stored as a node property so
-queries can return it. The binding returns query results as JSON of the shape
+IssunDB is an embedded engine with a bulk `IMPORT DATABASE` path, so ingestion is one
+import call over a generated Parquet/JSONL bundle rather than per-row inserts. IssunDB
+allocates its own NodeId per node, so the build offsets each label's dataset id into a
+globally unique `_id` (the imported NodeId) while keeping the original `id` as a node
+property, and resolves edge endpoints through the same offsets. The `id` property is
+what the catalog's Cypher filters on; IssunDB auto-indexes every scalar node property,
+so those filters become index/range scans with no explicit index DDL (an explicit
+node `CREATE INDEX` would provision a full-text index instead, which the workload does
+not use). The binding returns query results as JSON of the shape
 `{"columns": [...], "records": [{"values": [...]}]}`.
 """
 
@@ -63,10 +67,12 @@ class IssunDBEngine(Engine):
             current_offset += (max_id if max_id is not None else 0) + 1
 
         # 3. Process and write node Parquet files with _id column
+        n_node_rows = 0
         for label in self.schema.nodes:
             parquet_path = data_dir / "nodes" / f"{label.name}.parquet"
             dst_parquet = import_dir / f"{label.name}.parquet"
             df = pl.read_parquet(parquet_path)
+            n_node_rows += df.height
             df = df.with_columns(
                 (
                     pl.col(self.schema.id_column).cast(pl.Int64) + offsets[label.name]
@@ -77,10 +83,12 @@ class IssunDBEngine(Engine):
 
         # 4. Convert and write edge tables with offset endpoints
         edges_start = time.perf_counter()
+        n_edge_rows = 0
         for rel in self.schema.rels:
             parquet_path = data_dir / "edges" / f"{rel.name}.parquet"
             jsonl_path = import_dir / f"{rel.name}.jsonl"
             df = pl.read_parquet(parquet_path)
+            n_edge_rows += df.height
             df = df.with_columns(
                 [
                     (
@@ -118,9 +126,15 @@ class IssunDBEngine(Engine):
         # Clean up import temp files
         shutil.rmtree(import_dir)
 
-        # Split query time and attribute preparation to edges_seconds and nodes_seconds
-        nodes_seconds = nodes_prep_time + query_time * 0.5
-        edges_seconds = edges_prep_time + query_time * 0.5
+        # `IMPORT DATABASE` is a single bulk call whose internal node and edge phases
+        # are not separately measurable, so its time is apportioned across the two
+        # reported phases by row volume (not an arbitrary 50/50 split). Each phase
+        # also carries its own deterministic preparation cost (the offset rewrite and
+        # the JSONL conversion), which is genuinely per-phase and measured directly.
+        total_rows = n_node_rows + n_edge_rows
+        node_frac = n_node_rows / total_rows if total_rows else 0.5
+        nodes_seconds = nodes_prep_time + query_time * node_frac
+        edges_seconds = edges_prep_time + query_time * (1.0 - node_frac)
 
         return BuildResult(nodes_seconds, edges_seconds)
 

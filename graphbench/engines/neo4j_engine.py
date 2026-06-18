@@ -5,11 +5,14 @@ Neo4j is a client-server engine reached over Bolt, so it requires a running serv
 environment: NEO4J_URI (default bolt://localhost:7687), NEO4J_USER (default neo4j),
 and NEO4J_PASSWORD (default password).
 
-Ingestion wipes the database, creates a uniqueness constraint per label, then batches
-`UNWIND` + `CREATE` for nodes and edges (the dataset is pre-deduplicated and the
-database starts empty, so the slower MERGE is unnecessary). The dataset id is stored
-as the `id` property on every node, so the catalog's Cypher (which filters on `id`)
-is identical to the other engines and never touches Neo4j's internal element id.
+Ingestion wipes the database, creates a uniqueness constraint per label plus a range
+index on each non-id property the workload filters on, then batches `UNWIND` +
+`CREATE` for nodes and edges (the dataset is pre-deduplicated and the database starts
+empty, so the slower MERGE is unnecessary). The dataset id is stored as the `id`
+property on every node, so the catalog's Cypher (which filters on `id`) is identical
+to the other engines and never touches Neo4j's internal element id. IssunDB
+auto-indexes every scalar property, so indexing the filter columns here keeps the
+filtered-query comparison about execution rather than a missing index.
 
 `server_info` reports the server's memory settings via SHOW SETTINGS so published
 results carry the Neo4j configuration they were measured against.
@@ -37,7 +40,16 @@ def _chunks(rows: list, size: int):
 class Neo4jEngine(Engine):
     name = "neo4j"
     kind = "server"
-    build_method = "batched UNWIND+CREATE over Bolt, uniqueness constraint per label"
+    build_method = (
+        "batched UNWIND+CREATE over Bolt, uniqueness constraint per label, "
+        "range index on filter columns"
+    )
+    # Range indexes on the non-id properties the catalog filters on, so Neo4j seeks
+    # rather than scanning. IssunDB auto-indexes every scalar property, so without
+    # these the filtered queries would measure a missing index, not execution speed.
+    # Person.age (used by age_band_by_country) is the only selective filter at scale;
+    # the name lookups hit tiny fixed-size tables, so they are left unindexed.
+    _FILTER_INDEXES = (("Person", "age"),)
 
     def __init__(self, schema: Schema, workdir: Path):
         super().__init__(schema, workdir)
@@ -66,6 +78,13 @@ class Neo4jEngine(Engine):
             self._session.run(
                 f"CREATE CONSTRAINT IF NOT EXISTS FOR (n:{label.name}) "
                 f"REQUIRE n.{self.schema.id_column} IS UNIQUE"
+            )
+        # Created on the empty database so the index build folds into node load,
+        # the same way the uniqueness constraints (and IssunDB's auto-index) do.
+        for label, prop in self._FILTER_INDEXES:
+            self._session.run(
+                f"CREATE INDEX {label.lower()}_{prop} IF NOT EXISTS "
+                f"FOR (n:{label}) ON (n.{prop})"
             )
 
     def build(self, data_dir: Path) -> BuildResult:
