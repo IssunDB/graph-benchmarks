@@ -38,11 +38,32 @@ def _percentile(ordered: list[float], pct: float) -> float:
     return ordered[rank]
 
 
+def _median_ci(ordered: list[float]) -> tuple[float, float]:
+    """Distribution-free 95% CI for the *median* via the binomial (order-statistic)
+    method, normal-approximated.
+
+    The reported point estimate is the median, so its interval should be a median CI,
+    not `1.96*std/sqrt(n)` (a CI for the *mean* that also assumes normality). Latency
+    samples are right-skewed, so this nonparametric interval, read straight off the
+    order statistics, is the honest choice. Returns absolute (lo, hi) bounds.
+    """
+    n = len(ordered)
+    if n < 2:
+        return ordered[0], ordered[0]
+    half = 1.96 * math.sqrt(n)
+    lo_rank = math.floor((n - half) / 2.0)  # 1-indexed lower order statistic
+    hi_rank = math.ceil((n + half) / 2.0) + 1  # 1-indexed upper order statistic
+    lo_idx = min(max(lo_rank - 1, 0), n - 1)
+    hi_idx = min(max(hi_rank - 1, 0), n - 1)
+    return ordered[lo_idx], ordered[hi_idx]
+
+
 def _stats(samples: list[float]) -> dict:
     ordered = sorted(samples)
     n = len(samples)
     mean = statistics.fmean(samples)
     std = statistics.stdev(samples) if n > 1 else 0.0
+    ci_lo, ci_hi = _median_ci(ordered)
     return {
         "rounds": n,
         "min_ms": round(ordered[0], 4),
@@ -52,7 +73,9 @@ def _stats(samples: list[float]) -> dict:
         "p95_ms": round(_percentile(ordered, 95), 4),
         "mean_ms": round(mean, 4),
         "std_ms": round(std, 4),
-        "ci95_ms": round(1.96 * std / math.sqrt(n), 4) if n > 1 else 0.0,
+        # 95% CI for the median (order-statistic method), as absolute bounds.
+        "ci_lo_ms": round(ci_lo, 4),
+        "ci_hi_ms": round(ci_hi, 4),
     }
 
 

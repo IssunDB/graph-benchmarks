@@ -69,13 +69,18 @@ That's achieved by:
   never leak between engines, and the peak RSS reported per engine is attributable to that engine alone.
 - **Statistics.** Per query: a cold run (first execution after build) is reported separately; timed rounds
   run with the garbage collector disabled until both a minimum round count and a time budget are met; the
-  report shows median latency with a 95% confidence interval, and the plot carries p25 to p75 whiskers.
+  report shows median latency with a distribution-free 95% confidence interval for the median (the
+  order-statistic method, not a normal approximation on the mean), and the plot carries p25 to p75 whiskers.
 - **Honest comparisons.** Engines are labeled by kind (embedded / in-memory / client-server) and ingestion
   method; load times are never ranked across kinds, the client-server network round-trip caveat is stated
   in every report, and Neo4j's server memory settings are captured from the live server into the results.
+- **Indexing differences.** Index models differ by engine and cannot be fully equalized: IssunDB
+  auto-indexes every scalar property, Neo4j uses a uniqueness index on `id` plus an explicit range index
+  on the filtered column, Ladybug indexes only its primary key, and lance-graph holds no index. The report
+  spells this out so a filtered-query result is read as the engine's indexing model, not raw speed alone.
 - **Determinism.** The dataset is generated from a single seed, byte-for-byte reproducible, with edge rows
   shuffled so no engine gains a locality advantage from sorted insertion order. Hardware (CPU model, cores,
-  and RAM) is recorded in every results file.
+  and RAM) is recorded in every result file.
 - **Scaling.** `make sweep` benchmarks a series of dataset scales and plots median latency vs scale per
   query, so results are never a single-scale snapshot.
 
