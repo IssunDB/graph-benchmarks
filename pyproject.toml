@@ -8,7 +8,8 @@ dependencies = [
     "pyarrow>=17.0",
     "matplotlib>=3.9",
     "polars>=1.0",
-    "issundb==0.1.0a7",
+    "issundb>=0.1.0a8",
+    "patchelf>=0.17.2",
 ]
 
 [project.optional-dependencies]
