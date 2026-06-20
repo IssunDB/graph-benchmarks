@@ -689,7 +689,7 @@ wheels = [
 
 [[package]]
 name = "fastapi"
-version = "0.137.2"
+version = "0.138.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "annotated-doc" },
@@ -698,9 +698,9 @@ dependencies = [
     { name = "typing-extensions" },
     { name = "typing-inspection" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/e2/29/cc5819dc24d3daa80cdaa1aec023bf8652a70dd7fd1c96b0b225c99a7690/fastapi-0.137.2.tar.gz", hash = "sha256:b9d893bebc97dcfbdcb1917e88a292d062844ea19445a5fa4f7eb28c4baea9e3", size = 410332, upload-time = "2026-06-18T06:58:24.434Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/5b/58/ff455d9fe47c60abadb34b9e05a304b1f05f5ab8000ac01565156b6f5e43/fastapi-0.138.0.tar.gz", hash = "sha256:d445a4877636ad191e7053e08c9bf98cb921a6756776848400bb773d1740c061", size = 419240, upload-time = "2026-06-20T01:18:05.259Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/2f/ed/0c6b644e99fb5697d8bdcd36cdb47c52e77a63fc7a1514b1f03a6ecab955/fastapi-0.137.2-py3-none-any.whl", hash = "sha256:791d36261e916a98b25ac85ee591bc3db159394070f6d3d096d94fb378f60ce2", size = 122252, upload-time = "2026-06-18T06:58:26.074Z" },
+    { url = "https://files.pythonhosted.org/packages/6c/ff/8496d9847a5fedae775eb49460722d3efaa80487854273e9647ae876218c/fastapi-0.138.0-py3-none-any.whl", hash = "sha256:b6f54fd1bd72c80b0f899f172c61a600f6f7af9b43d4d772a018f35624048cb0", size = 126779, upload-time = "2026-06-20T01:18:03.483Z" },
 ]
 
 [[package]]
@@ -1270,13 +1270,13 @@ wheels = [
 
 [[package]]
 name = "issundb"
-version = "0.1.0a8"
+version = "0.1.0a9"
 source = { registry = "https://pypi.org/simple" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/2d/fa/c9d8778fca8f917bd0ba13e102bd64e710738939ea8937dd8b562f1504b8/issundb-0.1.0a8-cp310-abi3-macosx_11_0_arm64.whl", hash = "sha256:6ccb62740d4f5c866a81a8dccd1134085e75c06ffed9e9c1d1cdac1837c37280", size = 6829438, upload-time = "2026-06-19T09:31:41.397Z" },
-    { url = "https://files.pythonhosted.org/packages/03/ce/18691354d7639b50a917ea14a721ec9f5ddea246f73225461ae63bbfe4fe/issundb-0.1.0a8-cp310-abi3-manylinux_2_28_aarch64.whl", hash = "sha256:f6cbc83b0d5424975291ce175e826d188bd853153a09d79a425d44697cfd4ac8", size = 8956521, upload-time = "2026-06-19T09:31:42.729Z" },
-    { url = "https://files.pythonhosted.org/packages/b4/f4/ddea84c25c616e6f55b2fb5c6cfc36ee5df3088a2cc9448d3e0c2fffbdab/issundb-0.1.0a8-cp310-abi3-manylinux_2_28_x86_64.whl", hash = "sha256:74621c47a12c7e4635867738a226be57c4791c18abd8d1c31185e614989b8129", size = 10063051, upload-time = "2026-06-19T09:31:44.447Z" },
-    { url = "https://files.pythonhosted.org/packages/36/9d/dd1a92996e4a88b6d2a6520ccc1e68a0c5cc62036cd619ae7d96241c29e1/issundb-0.1.0a8-cp310-abi3-win_amd64.whl", hash = "sha256:d6fa280acccf019e4af51161ba5e0c990d4b0187bd75215b3ed1ad9a6881bd74", size = 8301712, upload-time = "2026-06-19T09:31:46.308Z" },
+    { url = "https://files.pythonhosted.org/packages/9d/f4/6d0f5629f75bdba9b546a872490352bbace1fbaafd6ac32dea48bb3194cb/issundb-0.1.0a9-cp310-abi3-macosx_11_0_arm64.whl", hash = "sha256:c51b8d721092ed313f8305fd8d0d0cc447db913e1c258ee6786af35e6135e2c0", size = 6874122, upload-time = "2026-06-20T15:13:31.957Z" },
+    { url = "https://files.pythonhosted.org/packages/7b/48/49c48cfa2db564ede589e27060da9272497209ee56bd2184bd523c2db236/issundb-0.1.0a9-cp310-abi3-manylinux_2_28_aarch64.whl", hash = "sha256:6c8920d1947f92653b294aa3e7c90499e6d3c4cc1525bf559811ababfd61a0ca", size = 9016039, upload-time = "2026-06-20T15:13:34.02Z" },
+    { url = "https://files.pythonhosted.org/packages/01/98/643b9c320d149ccd3218d7f963ed143180476ebf81ff26ce61e5eb7cdfff/issundb-0.1.0a9-cp310-abi3-manylinux_2_28_x86_64.whl", hash = "sha256:1d3c2d97caa52358c2a39bcca42a695a7471211d4e7d2eb0868674888e502da4", size = 10114149, upload-time = "2026-06-20T15:13:36.114Z" },
+    { url = "https://files.pythonhosted.org/packages/c7/3f/8bc3882ff6ee75dd9c8dba9b36cc4048078326b4a40e257445b8ac4986b2/issundb-0.1.0a9-cp310-abi3-win_amd64.whl", hash = "sha256:dbb68a3f26e71b67ce390e07cf6c6830ae4f2d1106b318dea4abd241e0aa101d", size = 8354424, upload-time = "2026-06-20T15:13:38.398Z" },
 ]
 
 [[package]]
@@ -2645,7 +2645,7 @@ wheels = [
 
 [[package]]
 name = "pytest"
-version = "9.1.0"
+version = "9.1.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "colorama", marker = "sys_platform == 'win32'" },
@@ -2656,9 +2656,9 @@ dependencies = [
     { name = "pygments" },
     { name = "tomli", marker = "python_full_version < '3.11'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/84/0e/b5858858d74958632c49b72cb25a3976ff9f632397626715be71c89d3971/pytest-9.1.0.tar.gz", hash = "sha256:41dd9148c08072446394cefd3d79701701335a9f4cae69ba92e39f6c7f5c061c", size = 1634181, upload-time = "2026-06-13T18:52:45.983Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/e4/47/b9efed96c114afcfa3c9d3fe98a76a1d14c74a9e266d397cf6eb64be5e01/pytest-9.1.1.tar.gz", hash = "sha256:1088fbde8f2b49d95a549a195707afa7a76a3ce9bcadc26b6d71f0ffda5fe313", size = 1636369, upload-time = "2026-06-19T10:58:32.857Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/8b/5a/ba30a81239b909821b3153e303e7def45178bf353da4f72380e6c5e8793b/pytest-9.1.0-py3-none-any.whl", hash = "sha256:8ebb0e7888bdf2bdfc602ec51f8f62d50200af37356c74e503c79a94f5c81f32", size = 386453, upload-time = "2026-06-13T18:52:44.045Z" },
+    { url = "https://files.pythonhosted.org/packages/24/25/1de2678b631f5a49215c6c96fff41ba892b0a34df68d6d80292b1b48aa7f/pytest-9.1.1-py3-none-any.whl", hash = "sha256:37a86b45efb9a47a61a36449063e8e18d0cab3161329fc099eb21783169c4f0c", size = 386536, upload-time = "2026-06-19T10:58:31.347Z" },
 ]
 
 [[package]]
