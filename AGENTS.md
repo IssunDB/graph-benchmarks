@@ -29,7 +29,7 @@ Priorities, in order:
 - Use Oxford commas in inline lists: "a, b, and c" not "a, b, c".
 - Do not use em dashes. Restructure the sentence, or use a colon or semicolon instead.
 - Avoid colorful adjectives and adverbs. Write "instruction decoder" not "elegant instruction decoder".
-- Use noun phrases for checklist items, not imperative verbs. Write "opcode timing table" not "build the opcode timing table".
+- Prefer using noun phrases for checklist items, not imperative verbs. Write "opcode timing table" not "build the opcode timing table".
 - Headings in Markdown files must be in title case: "Build from Source" not "Build from source". Minor words (a, an, the, and, but, or, for, in, on,
   at, to, by, of) stay lowercase unless they are the first word.
 

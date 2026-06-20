@@ -1106,8 +1106,8 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "issundb", specifier = ">=0.1.0a8" },
-    { name = "ladybug", marker = "extra == 'all'", specifier = ">=0.15" },
+    { name = "issundb", specifier = ">=0.1.0a9" },
+    { name = "ladybug", marker = "extra == 'all'", specifier = ">=0.17" },
     { name = "ladybug", marker = "extra == 'ladybug'", specifier = ">=0.17" },
     { name = "lance-graph", marker = "extra == 'all'", specifier = ">=0.5" },
     { name = "lance-graph", marker = "extra == 'lance-graph'", specifier = ">=0.5" },

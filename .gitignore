@@ -10,6 +10,7 @@ venv/
 data/
 work/
 results/
+tmp/
 
 # Other files and directories to ignore
 .DS_Store
@@ -19,3 +20,5 @@ results/
 .codex
 .idea/
 .vscode/
+*.mdb
+*.idb
