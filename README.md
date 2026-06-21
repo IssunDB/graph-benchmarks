@@ -63,19 +63,19 @@ See the [query definitions](graphbench/queries.py) for more details.
 
 To ensure reproducible, objective, and comparable performance metrics, the benchmark suite follows these practices:
 
-- **Correctness Oracle**: Every query is re-implemented in [`graphbench/oracle.py`](graphbench/oracle.py) using Polars. Engine result rows are diffed
+- **Correctness oracle**: Every query is re-implemented in [`graphbench/oracle.py`](graphbench/oracle.py) using Polars. Engine result rows are diffed
   against this oracle to verify correctness before timing, and mismatching queries fail validation.
-- **Process Isolation**: Each engine executes queries in a dedicated worker process ([`graphbench/_worker.py`](graphbench/_worker.py)) to prevent
+- **Process isolation**: Each engine executes queries in a dedicated worker process ([`graphbench/_worker.py`](graphbench/_worker.py)) to prevent
   cache, allocator, and heap contamination.
-- **Statistical Rigor**: Query timing runs with the garbage collector disabled until a minimum round count and a time budget are met. Reports display
+- **Statistical rigor**: Query timing runs with the garbage collector disabled until a minimum round count and a time budget are met. Reports display
   the median latency, a distribution-free 95% confidence interval, and p25 to p75 error bars. Cold runs are measured and reported separately.
 - **Categorization**: Engines are categorized by architecture (embedded, in-memory, or client-server) and ingestion method. Latency reports include
   network round-trip caveats for client-server engines and log live server settings.
-- **Index Disclosure**: Engine index models are documented (such as IssunDB auto-indexing, Neo4j range indexing, LadybugDB primary key indexing, and
+- **Index disclosure**: Engine index models are documented (such as IssunDB auto-indexing, Neo4j range indexing, LadybugDB primary key indexing, and
   Lance-graph no-indexing) to provide context for query latency differences.
 - **Determinism**: Datasets are generated from a single seed, and edge rows are shuffled to eliminate insertion-order locality benefits. CPU, core
   count, and RAM specifications are saved with every run.
-- **Multi-Scale Scaling**: The suite measures scaling characteristics by running a sweep across dataset sizes rather than relying on a single-point
+- **Multi-scale scaling**: The suite measures scaling characteristics by running a sweep across dataset sizes rather than relying on a single-point
   snapshot.
 
 #### Scope and Limitations
