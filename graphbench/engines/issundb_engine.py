@@ -36,7 +36,7 @@ class IssunDBEngine(Engine):
         self._db_path = workdir / "social.issundb"
         if self._db_path.exists():
             shutil.rmtree(self._db_path)
-        self._db = IssunDB(str(self._db_path))
+        self._db = IssunDB(str(self._db_path), map_size_gb=16)
 
     @classmethod
     def probe(cls) -> EngineInfo:

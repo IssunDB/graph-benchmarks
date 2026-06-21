@@ -72,7 +72,7 @@ class Neo4jEngine(Engine):
     def _reset(self) -> None:
         # Batched delete so a wipe at large scales does not exhaust the heap.
         self._session.run(
-            "MATCH (n) CALL { WITH n DETACH DELETE n } IN TRANSACTIONS OF 50000 ROWS"
+            "MATCH (n) CALL (n) { DETACH DELETE n } IN TRANSACTIONS OF 50000 ROWS"
         )
         for label in self.schema.nodes:
             self._session.run(

@@ -17,6 +17,10 @@ against IssunDB.
 | 3 | **Lance-graph** | [lancedb/lance-graph](https://github.com/lancedb/lance-graph) |
 | 4 | **Neo4j**       | [neo4j.com](https://neo4j.com/)                               |
 
+> [!NOTE]
+> Technically `Lance-graph` is not a graph database, but an in-memory graph query engine over Apache Arrow tables.
+> In this repository when the word `engine` or `graph engine` are used, it referse to `Lance-graph` plus the other graph databases in the table above.
+
 ### Schema and Queries
 
 #### Benchmark Graph Dataset
@@ -57,36 +61,28 @@ See the [query definitions](graphbench/queries.py) for more details.
 
 ### Methodology
 
-The benchmarks are created, so the published numbers are reproducible and hard to manipulate.
-That's achieved by:
+To ensure reproducible, objective, and comparable performance metrics, the benchmark suite follows these practices:
 
-- **Engine-independent correctness oracle.** Every query is independently re-implemented in
-  [`graphbench/oracle.py`](graphbench/oracle.py) with polars over the raw Parquet dataset. Each engine's
-  result rows (over several parameter instantiations) are diffed against the oracle; no engine, including
-  IssunDB, is ever used as the reference. Mismatches are reported, never silently omitted from timing.
-- **Process isolation.** Each engine is built and timed in its own worker process
-  ([`graphbench/_worker.py`](graphbench/_worker.py)), so heap state, allocator fragmentation, and caches
-  never leak between engines, and the peak RSS reported per engine is attributable to that engine alone.
-- **Statistics.** Per query: a cold run (first execution after build) is reported separately; timed rounds
-  run with the garbage collector disabled until both a minimum round count and a time budget are met; the
-  report shows median latency with a distribution-free 95% confidence interval for the median (the
-  order-statistic method, not a normal approximation on the mean), and the plot carries p25 to p75 whiskers.
-- **Honest comparisons.** Engines are labeled by kind (embedded / in-memory / client-server) and ingestion
-  method; load times are never ranked across kinds, the client-server network round-trip caveat is stated
-  in every report, and Neo4j's server memory settings are captured from the live server into the results.
-- **Indexing differences.** Index models differ by engine and cannot be fully equalized: IssunDB
-  auto-indexes every scalar property, Neo4j uses a uniqueness index on `id` plus an explicit range index
-  on the filtered column, Ladybug indexes only its primary key, and lance-graph holds no index. The report
-  spells this out so a filtered-query result is read as the engine's indexing model, not raw speed alone.
-- **Determinism.** The dataset is generated from a single seed, byte-for-byte reproducible, with edge rows
-  shuffled so no engine gains a locality advantage from sorted insertion order. Hardware (CPU model, cores,
-  and RAM) is recorded in every result file.
-- **Scaling.** `make sweep` benchmarks a series of dataset scales and plots median latency vs scale per
-  query, so results are never a single-scale snapshot.
+- **Correctness Oracle**: Every query is re-implemented in [`graphbench/oracle.py`](graphbench/oracle.py) using Polars. Engine result rows are diffed
+  against this oracle to verify correctness before timing, and mismatching queries fail validation.
+- **Process Isolation**: Each engine executes queries in a dedicated worker process ([`graphbench/_worker.py`](graphbench/_worker.py)) to prevent
+  cache, allocator, and heap contamination.
+- **Statistical Rigor**: Query timing runs with the garbage collector disabled until a minimum round count and a time budget are met. Reports display
+  the median latency, a distribution-free 95% confidence interval, and p25 to p75 error bars. Cold runs are measured and reported separately.
+- **Categorization**: Engines are categorized by architecture (embedded, in-memory, or client-server) and ingestion method. Latency reports include
+  network round-trip caveats for client-server engines and log live server settings.
+- **Index Disclosure**: Engine index models are documented (such as IssunDB auto-indexing, Neo4j range indexing, LadybugDB primary key indexing, and
+  Lance-graph no-indexing) to provide context for query latency differences.
+- **Determinism**: Datasets are generated from a single seed, and edge rows are shuffled to eliminate insertion-order locality benefits. CPU, core
+  count, and RAM specifications are saved with every run.
+- **Multi-Scale Scaling**: The suite measures scaling characteristics by running a sweep across dataset sizes rather than relying on a single-point
+  snapshot.
 
-Known limitations (deliberately out of scope so far): the suite measures single-threaded read-only latency;
-no concurrent throughput and no write/update workloads. Engines may not all support every query
-(e.g. variable-length patterns); unsupported queries show as `ERR` in the report rather than being dropped.
+#### Scope and Limitations
+
+The suite currently measures single-threaded read-only latency.
+Concurrent throughput, write workloads, and update workloads are out of scope.
+Unsupported queries are reported as errors rather than being omitted.
 
 > [!IMPORTANT]
 > Benchmarking different systems (with different design philosophies, architectures, feature sets, etc.) is not straightforward and is tricky.
