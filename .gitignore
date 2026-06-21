@@ -22,3 +22,4 @@ tmp/
 .vscode/
 *.mdb
 *.idb
+*.lbdb
