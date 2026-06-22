@@ -5,8 +5,7 @@
 [![Python version](https://img.shields.io/badge/python-%3E=3.10-3776ab?style=flat&labelColor=282c34&logo=python)](https://github.com/IssunDB/graph-benchmarks)
 [![License: MIT](https://img.shields.io/badge/license-MIT-3776ab?style=flat&labelColor=282c34&logo=open-source-initiative)](LICENSE)
 
-This repository includes a collection of graph benchmarks to compare the performance of a few graph databases
-against IssunDB.
+This repository includes a collection of graph benchmarks to compare the performance of a few graph databases against IssunDB.
 
 ### Benchmarked Graph Databases
 
@@ -46,36 +45,36 @@ aggregations, filter-joins, path counting, and variable-length traversal.
 Each query is categorized by its primary operation type.
 See the [query definitions](graphbench/queries.py) for more details.
 
-| #  | Query Name                     | Category      | Description                                                                   |
-|----|--------------------------------|---------------|-------------------------------------------------------------------------------|
-| 1  | **point_lookup**               | `point`       | Look up a single person by id.                                                |
-| 2  | **one_hop_neighbors**          | `expand`      | List the people a given person follows.                                       |
-| 3  | **top_followed**               | `aggregation` | Top 3 most-followed people.                                                   |
-| 4  | **top_followed_city**          | `aggregation` | City of the single most-followed person.                                      |
-| 5  | **youngest_cities_in_country** | `aggregation` | 5 cities in a country with the lowest average age, over a 3-hop chain.        |
-| 6  | **age_band_by_country**        | `aggregation` | Count of people aged 30-40 per country, over a 3-hop chain.                   |
-| 7  | **interest_gender_by_city**    | `filter_join` | Top cities by count of male people with a given interest (using multi-MATCH). |
-| 8  | **two_hop_paths**              | `path_count`  | Count of length-2 FOLLOWS paths (self-join on the middle node).               |
-| 9  | **two_hop_paths_filtered**     | `path_count`  | Length-2 FOLLOWS paths filtered on intermediate and destination age.          |
-| 10 | **follows_reach**              | `var_path`    | Distinct people reachable from a person via 1..2 FOLLOWS hops (`*1..2`).      |
+| #  | Query Name                     | Category      | Description                                                              |
+|----|--------------------------------|---------------|--------------------------------------------------------------------------|
+| 1  | **point_lookup**               | `point`       | Look up a single person by id.                                           |
+| 2  | **one_hop_neighbors**          | `expand`      | List the people a given person follows.                                  |
+| 3  | **top_followed**               | `aggregation` | Top three most-followed people.                                          |
+| 4  | **top_followed_city**          | `aggregation` | City of the single most-followed person.                                 |
+| 5  | **youngest_cities_in_country** | `aggregation` | Five cities in a country with the lowest average age.                    |
+| 6  | **age_band_by_country**        | `aggregation` | Count of people aged 30-40 per country.                                  |
+| 7  | **interest_gender_by_city**    | `filter_join` | Top cities by count of male people with a given interest.                |
+| 8  | **two_hop_paths**              | `path_count`  | Count of length-2 FOLLOWS paths.                                         |
+| 9  | **two_hop_paths_filtered**     | `path_count`  | Length-2 FOLLOWS paths filtered on intermediate and destination age.     |
+| 10 | **follows_reach**              | `var_path`    | Distinct people reachable from a person via 1..2 FOLLOWS hops (`*1..2`). |
 
 ### Methodology
 
 To ensure reproducible, objective, and comparable performance metrics, the benchmark suite follows these practices:
 
-- **Correctness Oracle**: Every query is re-implemented in [`graphbench/oracle.py`](graphbench/oracle.py) using Polars. Engine result rows are diffed
+- **Correctness oracle**: Every query is re-implemented in [`graphbench/oracle.py`](graphbench/oracle.py) using Polars. Engine result rows are diffed
   against this oracle to verify correctness before timing, and mismatching queries fail validation.
-- **Process Isolation**: Each engine executes queries in a dedicated worker process ([`graphbench/_worker.py`](graphbench/_worker.py)) to prevent
+- **Process isolation**: Each engine executes queries in a dedicated worker process ([`graphbench/_worker.py`](graphbench/_worker.py)) to prevent
   cache, allocator, and heap contamination.
-- **Statistical Rigor**: Query timing runs with the garbage collector disabled until a minimum round count and a time budget are met. Reports display
+- **Statistical rigor**: Query timing runs with the garbage collector disabled until a minimum round count and a time budget are met. Reports display
   the median latency, a distribution-free 95% confidence interval, and p25 to p75 error bars. Cold runs are measured and reported separately.
 - **Categorization**: Engines are categorized by architecture (embedded, in-memory, or client-server) and ingestion method. Latency reports include
   network round-trip caveats for client-server engines and log live server settings.
-- **Index Disclosure**: Engine index models are documented (such as IssunDB auto-indexing, Neo4j range indexing, LadybugDB primary key indexing, and
+- **Index disclosure**: Engine index models are documented (such as IssunDB auto-indexing, Neo4j range indexing, LadybugDB primary key indexing, and
   Lance-graph no-indexing) to provide context for query latency differences.
 - **Determinism**: Datasets are generated from a single seed, and edge rows are shuffled to eliminate insertion-order locality benefits. CPU, core
   count, and RAM specifications are saved with every run.
-- **Multi-Scale Scaling**: The suite measures scaling characteristics by running a sweep across dataset sizes rather than relying on a single-point
+- **Multi-scale scaling**: The suite measures scaling characteristics by running a sweep across dataset sizes rather than relying on a single-point
   snapshot.
 
 #### Scope and Limitations
