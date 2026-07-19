@@ -24,6 +24,29 @@ from .base import BuildResult, Engine, EngineInfo, Record, package_version
 from ..schema import Schema
 
 
+def _verify_import_counts(payload: dict, expected: dict[str, tuple[str, int]]) -> None:
+    """Check IMPORT DATABASE's per-file report against the prepared row counts.
+
+    Since IssunDB 0.1.0a16 the import returns one `(target, kind, count)` row
+    per COPY statement; a mismatch (for example an edge file misclassified as
+    nodes) previously surfaced only as silently empty query results. Older
+    versions return `{"imported": true}` and cannot be verified, so the check
+    is skipped for them.
+    """
+    if payload.get("columns") != ["target", "kind", "count"]:
+        return
+    imported = {
+        rec["values"][0]: (rec["values"][1], rec["values"][2])
+        for rec in payload["records"]
+    }
+    for target, want in expected.items():
+        got = imported.get(target)
+        if got != want:
+            raise RuntimeError(
+                f"IMPORT DATABASE ingested {got} for '{target}', expected {want}"
+            )
+
+
 class IssunDBEngine(Engine):
     name = "issundb"
     kind = "embedded"
@@ -68,11 +91,13 @@ class IssunDBEngine(Engine):
 
         # 3. Process and write node Parquet files with _id column
         n_node_rows = 0
+        expected_counts: dict[str, tuple[str, int]] = {}
         for label in self.schema.nodes:
             parquet_path = data_dir / "nodes" / f"{label.name}.parquet"
             dst_parquet = import_dir / f"{label.name}.parquet"
             df = pl.read_parquet(parquet_path)
             n_node_rows += df.height
+            expected_counts[label.name] = ("nodes", df.height)
             df = df.with_columns(
                 (
                     pl.col(self.schema.id_column).cast(pl.Int64) + offsets[label.name]
@@ -89,6 +114,7 @@ class IssunDBEngine(Engine):
             jsonl_path = import_dir / f"{rel.name}.jsonl"
             df = pl.read_parquet(parquet_path)
             n_edge_rows += df.height
+            expected_counts[rel.name] = ("relationships", df.height)
             df = df.with_columns(
                 [
                     (
@@ -118,10 +144,11 @@ class IssunDBEngine(Engine):
 
         (import_dir / "copy.cypher").write_text("\n".join(copy_lines))
 
-        # 6. Execute IMPORT DATABASE
+        # 6. Execute IMPORT DATABASE and verify the per-file report
         query_start = time.perf_counter()
-        self._db.query(f"IMPORT DATABASE '{import_dir}'")
+        payload = json.loads(self._db.query(f"IMPORT DATABASE '{import_dir}'"))
         query_time = time.perf_counter() - query_start
+        _verify_import_counts(payload, expected_counts)
 
         # Clean up import temp files
         shutil.rmtree(import_dir)
