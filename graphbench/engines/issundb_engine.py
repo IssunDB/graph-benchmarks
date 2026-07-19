@@ -93,10 +93,10 @@ class IssunDBEngine(Engine):
                 [
                     (
                         pl.col(self.schema.src_column).cast(pl.Int64) + offsets[rel.src]
-                    ).alias("from"),
+                    ).alias("_from"),
                     (
                         pl.col(self.schema.dst_column).cast(pl.Int64) + offsets[rel.dst]
-                    ).alias("to"),
+                    ).alias("_to"),
                 ]
             )
             # Drop original src/dst columns to avoid importing them as edge properties
