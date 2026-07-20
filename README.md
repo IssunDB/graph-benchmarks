@@ -2,7 +2,6 @@
 
 [![Tests](https://img.shields.io/github/actions/workflow/status/IssunDB/graph-benchmarks/tests.yml?label=tests&style=flat&labelColor=282c34&logo=github)](https://github.com/IssunDB/graph-benchmarks/actions/workflows/tests.yml)
 [![Code Coverage](https://img.shields.io/codecov/c/github/IssunDB/graph-benchmarks?label=coverage&style=flat&labelColor=282c34&logo=codecov)](https://codecov.io/gh/IssunDB/graph-benchmarks)
-[![Python version](https://img.shields.io/badge/python-%3E=3.10-3776ab?style=flat&labelColor=282c34&logo=python)](https://github.com/IssunDB/graph-benchmarks)
 [![License: MIT](https://img.shields.io/badge/license-MIT-3776ab?style=flat&labelColor=282c34&logo=open-source-initiative)](LICENSE)
 
 This repository includes a collection of graph benchmarks to compare the performance of a few graph databases against IssunDB.
