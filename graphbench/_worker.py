@@ -137,6 +137,22 @@ def _status_field_mb(name: str) -> float | None:
     return None
 
 
+def _rss_split_mb() -> dict:
+    """Current resident set size split into anonymous and file-backed parts, in MB.
+
+    The split is what makes a memory-mapped engine's number interpretable: file-backed
+    pages are the database mapped in, which the kernel can reclaim under pressure, while
+    anonymous pages are what the engine actually allocated. Without it, an LMDB-backed
+    engine's resident size and an in-memory engine's look like the same kind of cost.
+    Empty off Linux, where the fields are unavailable.
+    """
+    return {
+        key: value
+        for key, name in (("anon_mb", "RssAnon"), ("file_mb", "RssFile"))
+        if (value := _status_field_mb(name)) is not None
+    }
+
+
 def _rss_mb() -> float:
     """Current resident set size, in MB."""
     value = _status_field_mb("VmRSS")
@@ -208,6 +224,7 @@ def run_engine(cfg: dict) -> dict:
         }
         memory["build_peak_mb"] = _rss_peak_mb()
         memory["after_build_mb"] = _rss_mb()
+        memory["after_build_split"] = _rss_split_mb()
         # Separate the query phase's peak from the ingestion peak that precedes it.
         memory["peak_reset_after_build"] = _reset_rss_peak()
         record["server_info"] = engine.server_info()
@@ -230,6 +247,7 @@ def run_engine(cfg: dict) -> dict:
         engine.close()
     memory["query_peak_mb"] = _rss_peak_mb()
     memory["after_queries_mb"] = _rss_mb()
+    memory["after_queries_split"] = _rss_split_mb()
     record["memory"] = memory
     # Kept for the report's summary column: the high-water mark over everything this
     # worker did, which is the ingestion peak on every engine measured so far.

@@ -170,7 +170,9 @@ def to_markdown(results: dict, baseline: str | None = None) -> str:
     lines.append(
         "- Resident size includes file-backed pages, so for a memory-mapped engine part "
         "of it is page cache the kernel can reclaim rather than an allocation the engine "
-        "holds."
+        "holds. The split at each phase is recorded per engine as `after_build_split` and "
+        "`after_queries_split` (`anon_mb` is the engine's own allocations, `file_mb` the "
+        "mapped database)."
     )
     if reset_failed:
         lines.append(
