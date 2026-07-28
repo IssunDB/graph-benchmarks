@@ -119,6 +119,23 @@ class Engine(ABC):
     def run(self, cypher: str) -> list[Record]:
         """Execute one Cypher statement and return rows as {column: value} dicts."""
 
+    # Whether `open_built` can attach to a database this adapter already built, so a
+    # query can be timed in a process that did no ingestion. False for an engine with
+    # nothing persistent to reopen (an in-memory engine must re-read its input, which
+    # is a build, not an open) and for a server, whose caches live in another process
+    # and would need a restart to cool.
+    supports_cold_open: bool = False
+
+    @classmethod
+    def open_built(cls, schema: Schema, workdir: Path) -> "Engine":
+        """Attach to the database already built under `workdir`, without ingesting.
+
+        The default raises: an adapter opts in by setting `supports_cold_open` and
+        overriding this. An implementation must not delete or rebuild the artifacts,
+        which is the one thing the normal constructor does.
+        """
+        raise NotImplementedError(f"{cls.name} cannot reopen a built database")
+
     def server_info(self) -> dict:
         """Server-side configuration relevant to performance (empty for embedded)."""
         return {}

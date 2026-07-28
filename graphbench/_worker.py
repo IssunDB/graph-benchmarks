@@ -125,10 +125,66 @@ def _time_query(engine: eng.Engine, query: Query, qcfg: dict, cfg: dict) -> dict
     return out
 
 
+def _status_field_mb(name: str) -> float | None:
+    """Read one `/proc/self/status` size field, in MB. `None` off Linux."""
+    try:
+        with open("/proc/self/status") as fh:
+            for line in fh:
+                if line.startswith(f"{name}:"):
+                    return round(int(line.split()[1]) / 1024, 1)
+    except OSError:
+        return None
+    return None
+
+
+def _rss_mb() -> float:
+    """Current resident set size, in MB."""
+    value = _status_field_mb("VmRSS")
+    if value is not None:
+        return value
+    # No /proc: fall back to the resource module's current-process peak. This is a
+    # peak rather than a current reading, and see `_rss_peak_mb` for why it is only a
+    # fallback.
+    return _rss_peak_mb()
+
+
 def _rss_peak_mb() -> float:
+    """Peak resident set size of *this* address space, in MB.
+
+    Read from `VmHWM` rather than `getrusage(RUSAGE_SELF).ru_maxrss`, because that
+    high-water mark is inherited through fork *and* exec on Linux: a worker spawned by
+    a parent that had already built the polars oracle started life credited with the
+    parent's several-gigabyte peak, so every engine whose true peak was lower reported
+    the parent's number instead, identically. `VmHWM` belongs to the address space,
+    which `execve` replaces, so it starts fresh in the worker.
+
+    `ru_maxrss` remains the fallback where `/proc` is absent (macOS), where it carries
+    the same inheritance caveat; `memory_method` in the result records which was used.
+    """
+    value = _status_field_mb("VmHWM")
+    if value is not None:
+        return value
     peak = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
     # ru_maxrss is kilobytes on Linux, bytes on macOS.
     return round(peak / (1e6 if sys.platform == "darwin" else 1e3), 1)
+
+
+def _reset_rss_peak() -> bool:
+    """Reset `VmHWM` to the current RSS, so a later peak reading covers only what
+    happened after this call. Returns whether the reset took effect.
+
+    Writing `5` to `/proc/self/clear_refs` is `CLEAR_REFS_MM_HIWATER_RSS` (Linux 4.0
+    and later). It is how the query phase's peak can be reported separately from the
+    ingestion peak, which is otherwise the larger of the two and hides it. A kernel or
+    sandbox that refuses the write simply leaves the peak cumulative, which the
+    recorded flag makes visible rather than silent.
+    """
+    try:
+        with open("/proc/self/clear_refs", "w") as fh:
+            fh.write("5\n")
+    except OSError:
+        return False
+    return True
 
 
 def run_engine(cfg: dict) -> dict:
@@ -136,6 +192,13 @@ def run_engine(cfg: dict) -> dict:
     name = cfg["engine"]
     record: dict = {}
     engine = eng.get_engine_class(name)(SOCIAL, Path(cfg["workdir"]))
+    # Memory is recorded at phase boundaries rather than as one number, because
+    # "memory to ingest" and "memory to serve" are different questions and the first
+    # is usually the larger. A single peak over both answers neither.
+    memory: dict = {
+        "method": "VmHWM" if _status_field_mb("VmHWM") is not None else "ru_maxrss",
+        "before_build_mb": _rss_mb(),
+    }
     try:
         build = engine.build(Path(cfg["data_dir"]))
         record["build"] = {
@@ -143,6 +206,10 @@ def run_engine(cfg: dict) -> dict:
             "edges_seconds": round(build.edges_seconds, 4),
             "total_seconds": round(build.total_seconds, 4),
         }
+        memory["build_peak_mb"] = _rss_peak_mb()
+        memory["after_build_mb"] = _rss_mb()
+        # Separate the query phase's peak from the ingestion peak that precedes it.
+        memory["peak_reset_after_build"] = _reset_rss_peak()
         record["server_info"] = engine.server_info()
         print(f"[{name}] built in {build.total_seconds:.2f}s; running queries ...")
         record["queries"] = {}
@@ -161,7 +228,14 @@ def run_engine(cfg: dict) -> dict:
                 print(f"    {query.name:<26} ERROR: {exc}", flush=True)
     finally:
         engine.close()
-    record["rss_peak_mb"] = _rss_peak_mb()
+    memory["query_peak_mb"] = _rss_peak_mb()
+    memory["after_queries_mb"] = _rss_mb()
+    record["memory"] = memory
+    # Kept for the report's summary column: the high-water mark over everything this
+    # worker did, which is the ingestion peak on every engine measured so far.
+    record["rss_peak_mb"] = max(
+        memory.get("build_peak_mb", 0.0), memory["query_peak_mb"]
+    )
     return record
 
 

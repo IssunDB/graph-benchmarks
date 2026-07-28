@@ -51,15 +51,22 @@ class IssunDBEngine(Engine):
     name = "issundb"
     kind = "embedded"
     build_method = "IMPORT DATABASE (bulk COPY from Parquet and JSONL)"
+    supports_cold_open = True
 
-    def __init__(self, schema: Schema, workdir: Path):
+    def __init__(self, schema: Schema, workdir: Path, fresh: bool = True):
         super().__init__(schema, workdir)
         from issundb import IssunDB
 
         self._db_path = workdir / "social.issundb"
-        if self._db_path.exists():
+        # `fresh` is what separates a build from a cold open: a build must start from an
+        # empty database, and a cold open must leave the built one exactly as it is.
+        if fresh and self._db_path.exists():
             shutil.rmtree(self._db_path)
         self._db = IssunDB(str(self._db_path), map_size_gb=16)
+
+    @classmethod
+    def open_built(cls, schema: Schema, workdir: Path) -> "IssunDBEngine":
+        return cls(schema, workdir, fresh=False)
 
     @classmethod
     def probe(cls) -> EngineInfo:
