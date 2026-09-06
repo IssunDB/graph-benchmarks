@@ -42,9 +42,12 @@ Priorities, in order:
 - `graphbench/runner.py`: Benchmark orchestration, correctness checks, timing loops, and environment capture.
 - `graphbench/report.py`: Markdown reports and plots from benchmark results.
 - `graphbench/cli.py`: `graphbench` command-line entry point.
-- `graphbench/_worker.py`: Per-engine worker process used for isolation.
+- `graphbench/_worker.py`: Per-engine worker process used for isolation. Also owns the memory readings, taken at phase boundaries.
+- `graphbench/_cold_worker.py`: One-query worker that attaches to an already-built database, so a cold run is measured in a process that did no
+  ingestion and ran nothing else.
 - `graphbench/engines/`: Engine adapter implementations for IssunDB, LadybugDB, Lance-graph, and Neo4j.
-- `tests/`: Unit and integration tests for dataset generation, query definitions, normalization, oracle behavior, and engine integration.
+- `tests/`: Unit and integration tests for dataset generation, query definitions, normalization, oracle behavior, engine integration, and the two
+  measurements whose validity is easy to break (`test_measurement.py`).
 - `deploy/neo4j-compose.yml`: Local Neo4j service for client-server benchmark runs.
 - `assets/diagrams/`: Schema diagrams and source files.
 - `.github/workflows/tests.yml`: CI workflow for unit tests and a small smoke benchmark.
@@ -76,6 +79,25 @@ When changing a query, update the oracle and tests in the same change.
 Reports should preserve enough context to interpret the numbers: engine kind, load method, correctness status, latency distribution, confidence
 interval, memory usage, hardware, and relevant caveats.
 Do not remove correctness failures from summaries.
+
+### Measurement Rules
+
+Two measurements were reporting something other than what they claimed, and both are easy to reintroduce.
+
+- Memory comes from `/proc/self/status`, `VmHWM` for a peak and `VmRSS` for a current reading. Do not go back to
+  `resource.getrusage(RUSAGE_SELF).ru_maxrss`: that high-water mark is inherited through fork *and* exec, and because the runner builds the polars oracle
+  before spawning any worker, every worker inherited the parent's multi-gigabyte peak. Three engines, one of them a bare network client, reported the same
+  number to one decimal place. Record memory at phase boundaries (before build, after build, after queries) rather than as one peak, since the ingestion
+  peak is the larger on every engine measured so far and hides the serving footprint, and reset the peak between the two phases through
+  `clear_refs` where the kernel allows it.
+- A cold run is measured in its own process, one per query, by `_cold_worker` attaching to the database the build left behind through
+  `Engine.open_built`. Do not report the first execution inside the long-lived worker as a cold run: an engine arrives there already warmed by whatever
+  its ingestion built eagerly (IssunDB's `IMPORT DATABASE` ends with a full CSR-snapshot rebuild, so that cost lands in load time) and by every earlier
+  query. An `open_built` implementation must never delete or rebuild the artifacts, which is exactly what the normal constructor does; `tests/test_measurement.py`
+  pins that by running two cold workers in a row. An engine with nothing persistent to reopen reports no cold figure rather than a misleading one, and the
+  open is timed apart from the query so an engine that loads eagerly cannot look fast in one column and slow in none.
+- Both numbers are cold in the process, not on disk: the database file stays in the page cache from the build, and dropping it needs privileges a
+  benchmark should not ask for. Say so wherever the figures appear.
 
 ## Python Conventions
 

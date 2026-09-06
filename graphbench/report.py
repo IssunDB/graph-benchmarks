@@ -106,10 +106,8 @@ def to_markdown(results: dict, baseline: str | None = None) -> str:
     # ranked against each other.
     lines.append("## Load Time (grouped by engine kind - not comparable across kinds)")
     lines.append("")
-    lines.append(
-        "| Engine | Kind | Nodes (s) | Edges (s) | Total (s) | Peak RSS (MB) |"
-    )
-    lines.append("| --- | --- | --- | --- | --- | --- |")
+    lines.append("| Engine | Kind | Nodes (s) | Edges (s) | Total (s) |")
+    lines.append("| --- | --- | --- | --- | --- |")
     ordered = sorted(
         engines, key=lambda n: _KIND_ORDER.get(results["engines"][n].get("kind", ""), 9)
     )
@@ -117,16 +115,70 @@ def to_markdown(results: dict, baseline: str | None = None) -> str:
         rec = results["engines"][name]
         build = rec.get("build", {})
         kind = rec.get("kind", "")
-        rss = rec.get("rss_peak_mb")
-        if kind == "server":
-            rss_str = "n/a (client process only)"
-        else:
-            rss_str = f"{rss}" if rss is not None else "n/a"
         cells = [
             f"{build.get(key)}" if build.get(key) is not None else "n/a"
             for key in ("nodes_seconds", "edges_seconds", "total_seconds")
         ]
-        lines.append(f"| {name} | {kind} | {' | '.join(cells)} | {rss_str} |")
+        lines.append(f"| {name} | {kind} | {' | '.join(cells)} |")
+    lines.append("")
+
+    # Memory, split by phase. A single peak over build plus queries answers neither
+    # "how much to ingest" nor "how much to serve", and the ingestion peak is the larger
+    # on every engine measured so far, so it hid the serving figure entirely.
+    lines.append("## Memory (per worker process, MB)")
+    lines.append("")
+    lines.append(
+        "| Engine | Kind | Peak during load | Resident after load | "
+        "Peak while querying | Resident at end |"
+    )
+    lines.append("| --- | --- | --- | --- | --- | --- |")
+    methods: set[str] = set()
+    reset_failed = False
+    for name in ordered:
+        rec = results["engines"][name]
+        kind = rec.get("kind", "")
+        mem = rec.get("memory")
+        if kind == "server":
+            lines.append(f"| {name} | {kind} | n/a (client process only) | n/a | n/a | n/a |")
+            continue
+        if not isinstance(mem, dict):
+            lines.append(f"| {name} | {kind} | n/a | n/a | n/a | n/a |")
+            continue
+        methods.add(str(mem.get("method", "unknown")))
+        if mem.get("peak_reset_after_build") is False:
+            reset_failed = True
+        cells = [
+            f"{mem.get(key)}" if mem.get(key) is not None else "n/a"
+            for key in (
+                "build_peak_mb",
+                "after_build_mb",
+                "query_peak_mb",
+                "after_queries_mb",
+            )
+        ]
+        lines.append(f"| {name} | {kind} | {' | '.join(cells)} |")
+    lines.append("")
+    lines.append(
+        "- Read from `/proc/self/status` (`VmHWM` for a peak, `VmRSS` for a current "
+        "reading), not from `getrusage`, whose `ru_maxrss` is inherited through fork "
+        "and exec: a worker spawned after the parent built the oracle inherited the "
+        "parent's multi-gigabyte high-water mark, so engines below it all reported that "
+        "same number. Measurement method in this run: "
+        + ", ".join(sorted(methods) or ["n/a"])
+        + "."
+    )
+    lines.append(
+        "- Resident size includes file-backed pages, so for a memory-mapped engine part "
+        "of it is page cache the kernel can reclaim rather than an allocation the engine "
+        "holds. The split at each phase is recorded per engine as `after_build_split` and "
+        "`after_queries_split` (`anon_mb` is the engine's own allocations, `file_mb` the "
+        "mapped database)."
+    )
+    if reset_failed:
+        lines.append(
+            "- The peak could not be reset between phases on this host, so the "
+            "querying peak still includes the load peak."
+        )
     lines.append("")
 
     # Correctness matrix against the oracle.
@@ -189,17 +241,38 @@ def to_markdown(results: dict, baseline: str | None = None) -> str:
         lines.append(f"| {query} | " + " | ".join(cells) + " |")
     lines.append("")
 
-    # Cold runs: first execution after build, before any cache warms.
-    lines.append("## Cold Run (first execution after build, ms)")
+    # Cold runs, measured in a process that did no ingestion. See `_cold_worker`.
+    lines.append("## Cold Run (one query in a freshly opened database, ms)")
     lines.append("")
     lines.append("| Query | " + " | ".join(engines) + " |")
     lines.append("| " + " | ".join("---" for _ in range(len(engines) + 1)) + " |")
     for query in queries:
         cells = []
         for name in engines:
-            val = _query_stat(results, name, query, "cold_ms")
+            val = _query_stat(results, name, query, "cold_open_ms")
             cells.append(f"{val:.2f}" if val is not None else "n/a")
         lines.append(f"| {query} | " + " | ".join(cells) + " |")
+    lines.append("")
+    lines.append(
+        "- Each figure is one execution in its own process, attached to the database "
+        "the build left behind, with nothing else run in that process. The previous "
+        "version of this table reported the first execution inside the long-lived "
+        "worker, which was cold only for that one query's caches: everything an "
+        "engine's ingestion builds eagerly, and everything earlier queries warmed, was "
+        "already in place. Those figures are kept per query as "
+        "`first_run_in_warm_process_ms`."
+    )
+    lines.append(
+        "- The database file is still in the page cache from the build, so this is a "
+        "cold process rather than cold storage. The open itself is timed separately "
+        "(`cold_open_ms_open` per query), since an engine that loads eagerly on open "
+        "would otherwise look fast here and slow nowhere."
+    )
+    lines.append(
+        "- `n/a` means the engine has nothing persistent to reopen (an in-memory "
+        "engine re-reading its input is doing a build, not an open) or its state lives "
+        "in another process."
+    )
     lines.append("")
 
     # Caveats that make the numbers interpretable.

@@ -31,16 +31,27 @@ class LadybugEngine(Engine):
     name = "ladybug"
     kind = "embedded"
     build_method = "DDL + bulk COPY ... FROM Parquet"
+    supports_cold_open = True
 
-    def __init__(self, schema: Schema, workdir: Path):
+    def __init__(self, schema: Schema, workdir: Path, fresh: bool = True):
         super().__init__(schema, workdir)
         import ladybug as lb
 
         self._lb = lb
         self._db_path = workdir / "social.lbdb"
-        if self._db_path.exists():
+        # See `IssunDBEngine.__init__`: a build starts from an empty database, and a
+        # cold open must leave the built one exactly as it is.
+        if fresh and self._db_path.exists():
             self._db_path.unlink()
         self._db = lb.Database(str(self._db_path))
+        # `build` creates the query connection when it finishes; a cold open has no
+        # build to run, so it needs one now.
+        if not fresh:
+            self._conn = lb.Connection(self._db)
+
+    @classmethod
+    def open_built(cls, schema: Schema, workdir: Path) -> "LadybugEngine":
+        return cls(schema, workdir, fresh=False)
 
     @classmethod
     def probe(cls) -> EngineInfo:
