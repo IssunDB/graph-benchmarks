@@ -139,7 +139,9 @@ def to_markdown(results: dict, baseline: str | None = None) -> str:
         kind = rec.get("kind", "")
         mem = rec.get("memory")
         if kind == "server":
-            lines.append(f"| {name} | {kind} | n/a (client process only) | n/a | n/a | n/a |")
+            lines.append(
+                f"| {name} | {kind} | n/a (client process only) | n/a | n/a | n/a |"
+            )
             continue
         if not isinstance(mem, dict):
             lines.append(f"| {name} | {kind} | n/a | n/a | n/a | n/a |")
